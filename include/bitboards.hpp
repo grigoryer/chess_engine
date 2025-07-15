@@ -27,8 +27,6 @@ inline int lsb(U64 bitboard)
 
 void print_board(U64 bitboard);
 
-
-
 struct GameState 
 {
     U8 active_color;
@@ -37,8 +35,6 @@ struct GameState
     U8 en_passant;
     U16 fullmove_number;
     U64 zobrist_key;
-    I16 phase_value;
-    //Move next_move;
 
     GameState();
 };
@@ -69,10 +65,11 @@ struct Board
     Board();
 
     void init_piece_list();
-    U64 init_zobrist_key() const;
     void init_pieces_per_side_bitboard();
+    U64 init_zobrist_key();
     U64 occupancy();
 
+    void fen_parser(const std::string& fen);
     
     void init();//not complete
 };

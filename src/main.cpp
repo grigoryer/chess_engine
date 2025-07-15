@@ -1,44 +1,35 @@
 #include "bitboards.hpp"
+#include <sstream>
+#include <vector>
 
+void print_piece_list(Board b){
+    std::cout << "\nPiece List Array:\n";
+    for (int rank = 0; rank < 8; rank++) 
+    {
+        for (int file = 0; file < 8; file++) 
+        {
+            int square = rank * 8 + file;
+            std::cout << b.piece_list[square] << "\t";
+        }
+        std::cout << "\n\n";
+    }
+}
 
 int main ()
 {
-    
+
     Board b;
 
-        
-    set_bit(b.bb_pieces[WHITE][ROOK], a1);
-    set_bit(b.bb_pieces[WHITE][ROOK], h1);
-    set_bit(b.bb_pieces[WHITE][KNIGHT], b1);
-    set_bit(b.bb_pieces[WHITE][KNIGHT], g1);
-    set_bit(b.bb_pieces[WHITE][BISHOP], c1);
-    set_bit(b.bb_pieces[WHITE][BISHOP], f1);
-    set_bit(b.bb_pieces[WHITE][QUEEN], d1);
-    set_bit(b.bb_pieces[WHITE][KING], e1);
-    set_bit(b.bb_pieces[WHITE][PAWN], a2);
-    set_bit(b.bb_pieces[WHITE][PAWN], b2);
-    set_bit(b.bb_pieces[WHITE][PAWN], c2);
-    set_bit(b.bb_pieces[WHITE][PAWN], d2);
+    std::cout << "=== GAME STATE DEBUG ===" << std::endl;
+    std::cout << "Active Color: " << b.game_state.active_color << std::endl;
+    std::cout << "Castling: " << b.game_state.castling << std::endl;
+    std::cout << "En Passant: " << b.game_state.en_passant << std::endl;
+    std::cout << "Half Move Clock: " << b.game_state.half_move_clock << std::endl;
+    std::cout << "Fullmove Number: " << b.game_state.fullmove_number << std::endl;
+    std::cout << "Zobrist Key: " << b.game_state.zobrist_key << std::endl;
+    std::cout << "=========================" << std::endl;
 
-    set_bit(b.bb_pieces[WHITE][PAWN], e2);
-    set_bit(b.bb_pieces[WHITE][PAWN], f2);
-    set_bit(b.bb_pieces[WHITE][PAWN], g2);
-    set_bit(b.bb_pieces[WHITE][PAWN], h2);
-
-
-    // Set some BLACK pieces
-    set_bit(b.bb_pieces[BLACK][ROOK], a8);
-    set_bit(b.bb_pieces[BLACK][ROOK], h8);
-    set_bit(b.bb_pieces[BLACK][KNIGHT], b8);
-    set_bit(b.bb_pieces[BLACK][KNIGHT], g8);
-    set_bit(b.bb_pieces[BLACK][BISHOP], c8);
-    set_bit(b.bb_pieces[BLACK][QUEEN], d8);
-    set_bit(b.bb_pieces[BLACK][KING], e8);
-    set_bit(b.bb_pieces[BLACK][PAWN], a7);
-    set_bit(b.bb_pieces[BLACK][PAWN], h7);
-    set_bit(b.bb_pieces[BLACK][PAWN], e5);
-
-    print_board(b.occupancy());
-
+    std::cout << b.occupancy();
+    
     return 0;
 }

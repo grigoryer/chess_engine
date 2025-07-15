@@ -1,12 +1,12 @@
 #include "bitboards.hpp"
 #include "zobrist.hpp"
+#include <sstream>
+#include <vector>
 
 Board::Board()
 {
-    init_piece_list();
-    game_state.zobrist_key = init_zobrist_key();
+    init();
 }
-
 
 GameState::GameState() 
 : active_color(WHITE)
@@ -15,16 +15,100 @@ GameState::GameState()
 , en_passant(0)
 , fullmove_number(1)
 , zobrist_key(0)
-, phase_value(0)
 {  }
-
-
 
 
 History::History()
     : count(0)
 {  }
 
+
+//fen String parser
+void Board::fen_parser(const std::string& fen)
+{
+    std::vector<std::string> parts;
+    std::istringstream iss(fen);
+    std::string word;
+
+    while(iss >> word) {
+        parts.push_back(word);
+    }
+
+    //split up string into parts
+    int rank = 0; 
+    int file = 0;
+    std::string position = parts[0];
+    std::string color = parts[1];
+    std::string castling = parts[2];
+    std::string en_passant = parts[3];
+    std::string half_move = parts[4];
+    std::string move = parts[5];
+
+    //handle the first position part of the fen string and add bits where specified.
+    for(int i = 0; i < position.length(); i++)
+    {
+        char ch = position[i];
+
+        if(ch == '/')
+        {
+            rank++;
+            file = 0;
+        }
+        else if (std::isdigit(ch)) 
+        {
+            file += (ch - '0');
+        }
+        else
+        {
+            bool isWhite = !isupper(ch);
+            int square = (7 - rank) * 8 + file;
+            ch = tolower(ch);
+
+            switch(ch)
+            {
+                case 'k': set_bit(bb_pieces[isWhite][KING], square); break;
+                case 'q': set_bit(bb_pieces[isWhite][QUEEN], square); break;
+                case 'r': set_bit(bb_pieces[isWhite][ROOK], square); break;
+                case 'b': set_bit(bb_pieces[isWhite][BISHOP], square); break;
+                case 'n': set_bit(bb_pieces[isWhite][KNIGHT], square); break;
+                case 'p': set_bit(bb_pieces[isWhite][PAWN], square); break;
+            }
+            file++;    
+        }
+    }
+
+    game_state.active_color = (color == "w" ) ?  WHITE : BLACK;
+
+    //create hte castling int
+    for(int i = 0; i < castling.length(); i++)
+    {
+        char ch = castling[i];
+        switch(ch) 
+        {
+            case 'K': game_state.castling |= wk; break;
+            case 'Q': game_state.castling |= wq; break;
+            case 'k': game_state.castling |= bk; break;
+            case 'q': game_state.castling |= bq; break;
+            case '-': break;
+        }
+    }
+
+    //parse en passant if any.
+    if(en_passant != "-")
+    {
+        int file = en_passant[0] - 'a';
+        int rank = 8 - (en_passant[1] - '0');
+        game_state.en_passant = rank * 8 + file;
+    }
+    else
+    {
+        game_state.en_passant = 0;
+    }
+
+    
+    game_state.half_move_clock = std::stoi(half_move);
+    game_state.fullmove_number = std::stoi(move);
+}
 
 void print_board(U64 bitboard) 
 {
@@ -47,8 +131,15 @@ void print_board(U64 bitboard)
 }
 
 
+void Board::init()
+{
+    fen_parser(STARTING_FEN);
+    init_pieces_per_side_bitboard();
+    init_piece_list();
+    game_state.zobrist_key = init_zobrist_key();
+}
 
-U64 Board::init_zobrist_key() const 
+U64 Board::init_zobrist_key() 
 {
     U64 key = 0;
 
@@ -83,7 +174,7 @@ void Board::init_piece_list()
         while(bb_w)
         {
             int square = lsb(bb_w);
-            piece_list[square] = piece_type;
+            piece_list[square] = (PieceList)(K + piece_type);
             pop_bit(bb_w, square);
         }
         
@@ -91,18 +182,12 @@ void Board::init_piece_list()
         while(bb_b)
         {
             int square = lsb(bb_b);
-            piece_list[square] = piece_type;
+            piece_list[square] = (PieceList)(k + piece_type);
             pop_bit(bb_b, square);
         }
     }
 }
 
-void Board::init()
-{
-    init_pieces_per_side_bitboard();
-    init_piece_list();
-    game_state.zobrist_key = init_zobrist_key();
-}
 
 void Board::init_pieces_per_side_bitboard()
 {
@@ -119,8 +204,6 @@ U64 Board::occupancy()
 {
     return bb_side[WHITE] | bb_side[BLACK];
 }
-
-
 
 
 
