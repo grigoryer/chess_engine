@@ -3,6 +3,7 @@
 #include <iostream>
 #include "zobrist.hpp"
 #include "types.hpp"
+#include "moves.hpp"
 
 
 inline bool get_bit(const U64 &bitboard, int s) 
@@ -39,37 +40,43 @@ struct GameState
     GameState();
 };
 
-struct History 
+class History 
 {
-    GameState list[MAX_MOVES];
-    size_t count;
+    private:
+        GameState list[MAX_MOVES];
+        size_t count;
 
-    History();
-    void push(GameState game_state);
-    std::optional<GameState> pop();
-    void clear();
-    size_t len();
-    GameState& get_ref(size_t index);
+    public:
+        History();
+        void push(GameState game_state);
+        std::optional<GameState> pop();
+        void clear();
+        size_t len();
+        GameState& get_ref(size_t index);
     
 };
 
-struct Board 
+
+
+class Board 
 {
-    U64 bb_pieces[NUM_SIDES][NUM_PIECES] = {0ULL};
-    U64 bb_side[NUM_SIDES] = {0ULL};
-    int piece_list[NUM_SQUARES] = {0};
-    GameState game_state;
-    History history;
-    ZobristRandoms zobrist_randoms;
+    private:
+        U64 bb_pieces[NUM_SIDES][NUM_PIECES] = {0ULL};
+        U64 bb_side[NUM_SIDES] = {0ULL};
+        int piece_list[NUM_SQUARES] = {0};
+        GameState game_state;
+        History history;
+        ZobristRandoms zobrist_randoms;
+        AttackTables attack_tables;
+        
+    public:
+        Board();
 
-    Board();
-
-    void init_piece_list();
-    void init_pieces_per_side_bitboard();
-    U64 init_zobrist_key();
-    U64 occupancy();
-
-    void fen_parser(const std::string& fen);
-    
-    void init();//not complete
+        void init_piece_list();
+        void init_pieces_per_side_bitboard();
+        U64 init_zobrist_key();
+        U64 occupancy();
+        void fen_parser(const std::string& fen);
+        void init();
+        void print_piece_list(Board& b);
 };

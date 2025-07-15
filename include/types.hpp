@@ -15,11 +15,16 @@ const int MAX_MOVES = 2048;
 
 const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+const U64 NOT_AFILE = 18374403900871474942ULL;
+const U64 NOT_HFILE = 9187201950435737471ULL;
+const U64 NOT_ABFILE = 18229723555195321596ULL;
+const U64 NOT_GHFILE = 4557430888798830399ULL;
+
 enum Side 
 { WHITE, BLACK };
 
 enum Pieces 
-{ KING , QUEEN, ROOK, BISHOP, KNIGHT, PAWN };
+{ KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN };
 
 enum Castling
 { wk = 1, wq = 2, bk = 4, bq = 8 };

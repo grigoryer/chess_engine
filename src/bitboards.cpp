@@ -3,27 +3,53 @@
 #include <sstream>
 #include <vector>
 
+
+
+void print_board(U64 bitboard) 
+{
+    std::cout << "\n";
+    const U64 LAST_BIT = 63;
+
+    for (int rank = 0; rank < 8; ++rank) 
+    {
+        std::cout << 8 - rank << "  ";
+        for (int file = 7; file >= 0; --file) 
+        {
+            U64 mask = 1ULL << (LAST_BIT - (rank * 8 + file));
+            char c = (bitboard & mask) ? '1' : '.';
+            std::cout << c << ' ';
+        }
+        std::cout << '\n';
+    }
+    std::cout << "   a b c d e f g h\n\n";
+    std::cout << "#: " << bitboard << '\n';
+}
+
+
+
+void Board::print_piece_list(Board& b){
+    std::cout << "\nPiece List Array:\n";
+    for (int rank = 7; rank >= 0; rank--)  // Start from rank 7 (8th rank) and go down
+    {
+        for (int file = 0; file < 8; file++) 
+        {
+            int square = rank * 8 + file;
+            std::cout << b.piece_list[square] << "\t";
+        }
+        std::cout << "\n\n";
+    }
+}
+
+
+/*=========================
+    BOARD STRUCT
+=========================*/
+
 Board::Board()
 {
     init();
 }
 
-GameState::GameState() 
-: active_color(WHITE)
-, castling(0)
-, half_move_clock(0)
-, en_passant(0)
-, fullmove_number(1)
-, zobrist_key(0)
-{  }
-
-
-History::History()
-    : count(0)
-{  }
-
-
-//fen String parser
 void Board::fen_parser(const std::string& fen)
 {
     std::vector<std::string> parts;
@@ -102,7 +128,7 @@ void Board::fen_parser(const std::string& fen)
     }
     else
     {
-        game_state.en_passant = 0;
+        game_state.en_passant = 16; //none value
     }
 
     
@@ -110,33 +136,13 @@ void Board::fen_parser(const std::string& fen)
     game_state.fullmove_number = std::stoi(move);
 }
 
-void print_board(U64 bitboard) 
-{
-    std::cout << "\n";
-    const U64 LAST_BIT = 63;
-
-    for (int rank = 0; rank < 8; ++rank) 
-    {
-        std::cout << 8 - rank << "  ";
-        for (int file = 7; file >= 0; --file) 
-        {
-            U64 mask = 1ULL << (LAST_BIT - (rank * 8 + file));
-            char c = (bitboard & mask) ? '1' : '.';
-            std::cout << c << ' ';
-        }
-        std::cout << '\n';
-    }
-    std::cout << "   a b c d e f g h\n\n";
-    std::cout << "#: " << bitboard << '\n';
-}
-
-
 void Board::init()
 {
     fen_parser(STARTING_FEN);
     init_pieces_per_side_bitboard();
     init_piece_list();
     game_state.zobrist_key = init_zobrist_key();
+    attack_tables.init_leaper_pieces();
 }
 
 U64 Board::init_zobrist_key() 
@@ -188,7 +194,6 @@ void Board::init_piece_list()
     }
 }
 
-
 void Board::init_pieces_per_side_bitboard()
 {
     for(int piece = 0; piece < NUM_PIECES; piece++)
@@ -198,14 +203,35 @@ void Board::init_pieces_per_side_bitboard()
     }
 }
 
-
-
 U64 Board::occupancy()
 {
     return bb_side[WHITE] | bb_side[BLACK];
 }
 
 
+
+/*=========================
+    GAME STATE STRUCT
+=========================*/
+
+GameState::GameState() 
+: active_color(WHITE)
+, castling(0)
+, half_move_clock(0)
+, en_passant(0)
+, fullmove_number(1)
+, zobrist_key(0)
+{  }
+
+
+
+/*=========================
+    HISTORY STRUCT
+=========================*/
+
+History::History()
+    : count(0)
+{  }
 
 void History::push(GameState g)
 {
