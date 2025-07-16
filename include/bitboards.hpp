@@ -26,6 +26,7 @@ inline int lsb(U64 bitboard)
     return __builtin_ctzll(bitboard);
 }
 
+
 void print_board(U64 bitboard);
 
 struct GameState 
@@ -38,13 +39,15 @@ struct GameState
     U64 zobrist_key;
 
     GameState();
+    U8 us();
+    U8 opponent();
 };
 
 class History 
 {
     private:
         GameState list[MAX_MOVES];
-        size_t count;
+        int count;
 
     public:
         History();
@@ -53,14 +56,13 @@ class History
         void clear();
         size_t len();
         GameState& get_ref(size_t index);
-    
 };
 
 
 
 class Board 
 {
-    private:
+    public:
         U64 bb_pieces[NUM_SIDES][NUM_PIECES] = {0ULL};
         U64 bb_side[NUM_SIDES] = {0ULL};
         int piece_list[NUM_SQUARES] = {0};
@@ -74,9 +76,11 @@ class Board
 
         void init_piece_list();
         void init_pieces_per_side_bitboard();
+        void init();
+
         U64 init_zobrist_key();
         U64 occupancy();
+
         void fen_parser(const std::string& fen);
-        void init();
-        void print_piece_list(Board& b);
+        void print_piece_list();
 };

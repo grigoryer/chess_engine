@@ -1,9 +1,12 @@
 #include "bitboards.hpp"
-#include "zobrist.hpp"
 #include <sstream>
 #include <vector>
 
 
+
+/*=========================
+    DEBUG FUNCTIONS
+=========================*/
 
 void print_board(U64 bitboard) 
 {
@@ -25,21 +28,41 @@ void print_board(U64 bitboard)
     std::cout << "#: " << bitboard << '\n';
 }
 
+void Board::print_piece_list() 
+{
 
-
-void Board::print_piece_list(Board& b){
-    std::cout << "\nPiece List Array:\n";
-    for (int rank = 7; rank >= 0; rank--)  // Start from rank 7 (8th rank) and go down
+    const char piece_to_char[13] = 
     {
+        [NONE] = '.',
+        [K] = 'K',
+        [Q] = 'Q', 
+        [R] = 'R',
+        [B] = 'B',
+        [N] = 'N',
+        [P] = 'P',
+        [k] = 'k',
+        [q] = 'q',
+        [r] = 'r',
+        [b] = 'b',
+        [n] = 'n',
+        [p] = 'p'
+    };
+
+    std::cout << "\nPiece List Array:\n";
+
+    for (int rank = 7; rank >= 0; rank--) 
+    {  
+        std::cout << rank << "  ";
         for (int file = 0; file < 8; file++) 
         {
             int square = rank * 8 + file;
-            std::cout << b.piece_list[square] << "\t";
+            char piece_char = piece_to_char[piece_list[square]];
+            std::cout << piece_char << " ";
         }
-        std::cout << "\n\n";
+        std::cout << "\n";
     }
+    std::cout << "\n   a b c d e f g h\n";
 }
-
 
 /*=========================
     BOARD STRUCT
@@ -142,7 +165,6 @@ void Board::init()
     init_pieces_per_side_bitboard();
     init_piece_list();
     game_state.zobrist_key = init_zobrist_key();
-    attack_tables.init_leaper_pieces();
 }
 
 U64 Board::init_zobrist_key() 
@@ -224,13 +246,23 @@ GameState::GameState()
 {  }
 
 
+U8 GameState::us()
+{
+    return active_color;
+}
+
+
+U8 GameState::opponent()
+{
+    return active_color ^ 1;
+}
 
 /*=========================
     HISTORY STRUCT
 =========================*/
 
 History::History()
-    : count(0)
+: count(0)
 {  }
 
 void History::push(GameState g)
