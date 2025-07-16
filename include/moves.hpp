@@ -22,19 +22,34 @@ class AttackTables
         void init_leaper_pieces();
 
         //slider pieces
-
         U64 rook_attacks[NUM_SQUARES][4096];
+        U64 bishop_attacks[NUM_SQUARES][1024];
         U64 mask_rook_attacks(int square);
         U64 mask_bishop_attacks(int square);
         U64 gen_occupancy(int index, U64 attack_mask);
+
+        U64 gen_rook_attacks_onfly(int square, U64 occupancy);
+        U64 gen_bishop_attacks_onfly(int square, U64 occupancy);
+        void init_slider_pieces();
+        
+
+
+
+        void debug_magic_mismatch();
+        void comprehensive_magic_test();
+
+        U64 get_rook_attacks(int square, U64 occupancy);
+        U64 get_bishop_attacks(int square, U64 occupancy);
 
         AttackTables();
 };
 
 
-struct SMagic {
+struct Magic {
     U64* ptr;  // pointer to attack_table for each particular square
     U64 mask;  // to mask relevant squares of both lines (no outer squares)
     U64 magic; // magic 64-bit factor
     int shift; // shift right
  };
+
+
