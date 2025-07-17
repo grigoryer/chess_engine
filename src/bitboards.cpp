@@ -1,8 +1,7 @@
 #include "bitboards.hpp"
 #include <sstream>
 #include <vector>
-
-
+#include <cstring>  
 
 /*=========================
     DEBUG FUNCTIONS
@@ -52,7 +51,7 @@ void Board::print_piece_list()
 
     for (int rank = 7; rank >= 0; rank--) 
     {  
-        std::cout << rank << "  ";
+        std::cout << rank + 1 << "  ";
         for (int file = 0; file < 8; file++) 
         {
             int square = rank * 8 + file;
@@ -146,22 +145,32 @@ void Board::fen_parser(const std::string& fen)
     if(en_passant != "-")
     {
         int file = en_passant[0] - 'a';
-        int rank = 8 - (en_passant[1] - '0');
-        game_state.en_passant = rank * 8 + file;
+        int rank = en_passant[1] - '0';
+        if(rank == 3) 
+        {
+            game_state.en_passant = file; // 0-7
+        }
+        else if(rank == 6) 
+        {
+            game_state.en_passant = 8 + file; 
+        }
     }
     else
     {
         game_state.en_passant = 16; //none value
     }
 
+    if(half_move == "-" || parts.size() < 5){game_state.half_move_clock = 0;}
+    else {game_state.half_move_clock = std::stoi(half_move);}
+
+    if(move == "-" || parts.size() < 5){game_state.fullmove_number = 0;}
+    else{game_state.fullmove_number = std::stoi(move);}
     
-    game_state.half_move_clock = std::stoi(half_move);
-    game_state.fullmove_number = std::stoi(move);
 }
 
 void Board::init()
 {
-    fen_parser(STARTING_FEN);
+    fen_parser(CUSTOM_FEN);
     init_pieces_per_side_bitboard();
     init_piece_list();
     game_state.zobrist_key = init_zobrist_key();
@@ -195,7 +204,6 @@ U64 Board::init_zobrist_key()
 
 void Board::init_piece_list()
 {
-    
     for(int piece_type = KING; piece_type <= PAWN; piece_type++)
     {  
         U64 bb_w = bb_pieces[WHITE][piece_type];
@@ -230,6 +238,76 @@ U64 Board::occupancy()
     return bb_side[WHITE] | bb_side[BLACK];
 }
 
+U8 Board::us()
+{
+    return game_state.active_color;
+}
+
+U8 Board::opponent()
+{
+    return game_state.active_color ^ 1;
+}
+
+void Board::reset_board()
+{
+    memset(bb_pieces, 0, sizeof(bb_pieces));
+    memset(bb_side, 0, sizeof(bb_side));
+    memset(piece_list, NONE, sizeof(piece_list));
+
+    game_state.clear();
+    history.clear();
+}
+
+int Board::king_sqaure(int side)
+{
+    return lsb(bb_pieces[side][KING]);
+}
+
+U64& Board::get_piece(int side, int Piece)
+{
+    return bb_pieces[side][Piece];
+}
+
+U64& Board::get_side(int side)
+{
+    return bb_side[side];
+}
+
+bool Board::has_bishop_pair(int side) 
+{
+    U64 bb_bishop = get_piece(side, BISHOP);
+
+    if(bits_in_bitboard(bb_bishop) < 2) return false;
+
+    int count_dark = 0;
+    int count_light = 0;
+
+    while(bb_bishop)
+    {
+        int square = lsb(bb_bishop);
+        if(is_white_square(square)) count_light++;
+        else count_dark++;
+        pop_bit(bb_bishop, square);
+    }
+
+    return (count_dark > 0 && count_light > 0);
+}
+
+bool Board::is_white_square(int square)
+{
+    int rank = square / 8;
+    int file = square % 8;
+    return (rank + file) % 2 == 0;
+}
+
+void Board::load_fen(const std::string& fen)
+{
+    reset_board();
+    fen_parser(fen);
+    init_pieces_per_side_bitboard();
+    init_piece_list();
+    game_state.zobrist_key = init_zobrist_key();
+}
 
 
 /*=========================
@@ -237,24 +315,38 @@ U64 Board::occupancy()
 =========================*/
 
 GameState::GameState() 
-: active_color(WHITE)
-, castling(0)
-, half_move_clock(0)
-, en_passant(0)
-, fullmove_number(1)
-, zobrist_key(0)
-{  }
+    : active_color(WHITE)
+    , castling(0)
+    , half_move_clock(0)
+    , en_passant(16)
+    , fullmove_number(1)
+    , zobrist_key(0)
+{ move = Move(); } 
 
 
-U8 GameState::us()
+void GameState::clear()
 {
-    return active_color;
+    active_color = WHITE;
+    castling = 0;
+    half_move_clock = 0;
+    en_passant = 16;          
+    fullmove_number = 1;
+    zobrist_key = 0;
 }
 
-
-U8 GameState::opponent()
+int GameState::enpassant_to_square(int enpassant_num)
 {
-    return active_color ^ 1;
+    if (enpassant_num < 0 || enpassant_num > 15) {
+        return -1; // Invalid input
+    }
+    
+    if (enpassant_num <= 7) {
+        // Files a-h on rank 3 (squares 16-23)
+        return 16 + enpassant_num;
+    } else {
+        // Files a-h on rank 6 (squares 40-47)
+        return 40 + (enpassant_num - 8);
+    }
 }
 
 /*=========================
@@ -262,7 +354,7 @@ U8 GameState::opponent()
 =========================*/
 
 History::History()
-: count(0)
+    : count(0)
 {  }
 
 void History::push(GameState g)
