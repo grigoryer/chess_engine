@@ -18,7 +18,7 @@ const int MAX_MOVES = 2048;
 
 const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-const std::string CUSTOM_FEN = "r3kb1r/8/8/3q4/8/2Q5/8/R3KB1R w KQkq - 0 1";
+const std::string CUSTOM_FEN = "r3kb1r/8/8/pP6/8/2Q5/8/R3KB1R w KQkq a6 0 1";
 
 const std::string empty_board =  "8/8/8/8/8/8/8/8 w - - ";
 const std::string start_position =  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";

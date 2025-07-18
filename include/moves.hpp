@@ -44,11 +44,35 @@ struct Move {
     // Utility
     bool is_null() const;
     void clear();
+
+
+    //other
+
+    bool is_promotion() const;
+    bool is_quiet() const;
+    bool is_empty() const;
+
+    
+
     
     // Comparison operators
-    bool operator==(const Move& other) const;
-    bool operator!=(const Move& other) const;
-    
-    // For debugging/display
+    void print_move(U8 active_color) const;
+    std::string n_to_sq(U32 num) const;
+    std::string n_to_piece(U32 num, U8 active_color) const;
     U32 get_raw() const;
+};
+
+
+
+
+
+struct MoveList
+{
+    Move moves[256] = {};
+    int count = 0;
+
+    void add (const Move& move);
+    void clear();
+    void remove(int index);
+    bool is_move_empty(int i) const;
 };
