@@ -1,5 +1,6 @@
 #pragma once
 #include "types.hpp"
+#include <array>
 
 // Move struct with bit encoding
 struct Move {
@@ -17,25 +18,25 @@ struct Move {
     
     // Constructors
     Move();
-    Move(int source, int target, int piece, int promoted = 0, 
+    Move(U8 source, U8 target, U8 piece, U8 promoted = 0, 
          bool capture = false, bool double_push = false, 
          bool enpassant = false, bool castling = false);
     
     // Getters
-    int get_source() const;
-    int get_target() const;
-    int get_piece() const;
-    int get_promoted() const;
+    U8 get_source() const;
+    U8 get_target() const;
+    U8 get_piece() const;
+    U8 get_promoted() const;
     bool is_capture() const;
     bool is_double() const;
     bool is_enpassant() const;
     bool is_castling() const;
     
     // Setters
-    void set_source(int source);
-    void set_target(int target);
-    void set_piece(int piece);
-    void set_promoted(int promoted);
+    void set_source(U8 source);
+    void set_target(U8 target);
+    void set_piece(U8 piece);
+    void set_promoted(U8 promoted);
     void set_capture(bool capture);
     void set_double(bool double_push);
     void set_enpassant(bool enpassant);
@@ -45,34 +46,24 @@ struct Move {
     bool is_null() const;
     void clear();
 
-
     //other
-
     bool is_promotion() const;
     bool is_quiet() const;
     bool is_empty() const;
 
-    
-
-    
     // Comparison operators
     void print_move(U8 active_color) const;
-    std::string n_to_sq(U32 num) const;
-    std::string n_to_piece(U32 num, U8 active_color) const;
+    static std::string n_to_sq(U8 num);
+    static std::string n_to_piece(U8 num, U8 active_color);
     U32 get_raw() const;
 };
 
-
-
-
-
 struct MoveList
 {
-    Move moves[256] = {};
+    std::array<Move, MAX_HISTORY> moves = {};
     int count = 0;
 
-    void add (const Move& move);
+    void add(Move move);
     void clear();
-    void remove(int index);
-    bool is_move_empty(int i) const;
+    bool is_move_empty(U16 index) const;
 };

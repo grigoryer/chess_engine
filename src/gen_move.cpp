@@ -1,124 +1,168 @@
 #include "bitboards.hpp"
-
-
-
+#include "types.hpp"
+#include <iostream>
 
 void Board::make_move(const Move move)
 {   
     game_state.move = move;
     history.push(game_state);
 
-    int side = us();
-    int piece = move.get_piece();
-    int source = move.get_source();
-    int target = move.get_target();
+    U8 side = us();
+    U8 piece = move.get_piece();
+    U8 source = move.get_source();
+    U8 target = move.get_target();
+    U8 promoted = move.get_promoted();
+    bool castling = move.is_castling();
 
-    if(move.is_promotion() != 0) 
+
+    if(move.is_capture() == true) 
     {
-        int promoted_piece = promotion_support();
+        capture_support(target);
+    }
+
+    if(promoted != 0) 
+    {
+        U8 promoted_piece = promotion_support(promoted);
         remove_piece(side, piece, source);
         put_piece(side, promoted_piece, target);
-    } 
+    }
     else 
     {
         move_piece(side, piece, source, target);
     }
 
+    move_support(side, piece, target, source, move);
     move.print_move(side);
-    move_support(side, piece, target);
 }
 
-void Board::move_support(int side, int piece, int target)
+void Board::move_support(U8 side, U8 piece, U8 target, U8 source, const Move& move)
 {
-
     if(move.is_castling()) { castling_support(target); }
     if(move.is_enpassant()) { enpassant_support(); }
-    if(move.is_double()) { double_support(target); }
+
+    if(move.is_double() == true) { double_support(target); }
 
     if(move.is_capture() || move.is_promotion() || piece == PAWN) 
     { 
         game_state.half_move_clock = 0; 
     }
-
-    if(piece == ROOK) 
-    { 
-        update_castling_permissions(game_state.castling & ~(side == WHITE ? 3 : 12));
-    }
-
-    if(piece == KING) 
+    else 
     {
-        update_castling_permissions(game_state.castling & ~(side == WHITE ? 3 : 12));
+        game_state.half_move_clock++; 
     }
 
     if(!move.is_double()) { clear_epsquare(); }
+    
+    if(piece == ROOK || piece == KING) {castling_permissions_support(piece, source, side); }
+
+    if(side == BLACK) { game_state.fullmove_number++;}
 
     move_list.clear();
+
     swap_sides();
 }
 
-
-int Board::promotion_support()
+void Board::capture_support(U8 square)
 {
-    switch(move.get_promoted())
+    U8 encoded_piece = piece_list[square];
+    U8 enemy = opponent();
+    
+    // Convert encoded piece to piece type
+    U8 piece_type = (encoded_piece <= P) ? (encoded_piece - 1) : (encoded_piece - 7);
+    
+    remove_piece(enemy, piece_type, square);
+}
+
+void Board::castling_permissions_support(U8 piece, U8 from, U8 side)
+{
+    if(piece == ROOK) 
     {
-        case(1): return KNIGHT;
-        case(2): return BISHOP;
-        case(4): return ROOK;
-        case(8): return QUEEN;
-        default: return QUEEN; // fallback
+        U8 new_castling = game_state.castling;
+
+        if(from == h1) new_castling &= ~wk;      // White kingside
+        else if(from == a1) new_castling &= ~wq; // White queenside  
+        else if(from == h8) new_castling &= ~bk; // Black kingside
+        else if(from == a8) new_castling &= ~bq; // Black queenside
+        
+        update_castling_permissions(new_castling);
+    }
+
+    if (piece == KING) 
+    {
+        // Remove both castling rights for the moving side
+        update_castling_permissions(game_state.castling & ~(side == WHITE ? white_castling : black_castling));
     }
 }
 
-void Board::castling_support(int king_target)
+
+U8 Board::promotion_support(U8 promotion)
+{
+    switch(promotion)
+    {
+        case(N): return KNIGHT;
+        case(B): return BISHOP;
+        case(R): return ROOK;
+        case(Q): return QUEEN; //NOLINT
+        default: return QUEEN; 
+    }
+}
+
+void Board::castling_support(U8 king_target)
 {
     if(king_target == g1) 
     { 
         remove_piece(WHITE, ROOK, h1);
         put_piece(WHITE, ROOK, f1);
-        update_castling_permissions(game_state.castling & ~3);
+        update_castling_permissions(game_state.castling & ~white_castling);
     }
     else if(king_target == c1) 
     { 
         remove_piece(WHITE, ROOK, a1);
         put_piece(WHITE, ROOK, d1);
-        update_castling_permissions(game_state.castling & ~3);
+        update_castling_permissions(game_state.castling & ~white_castling);
     }
     else if(king_target == g8) 
     { 
         remove_piece(BLACK, ROOK, h8);
         put_piece(BLACK, ROOK, f8);
-        update_castling_permissions(game_state.castling & ~12);
+        update_castling_permissions(game_state.castling & ~black_castling);
     }
     else if(king_target == c8) 
     { 
         remove_piece(BLACK, ROOK, a8);
         put_piece(BLACK, ROOK, d8);
-        update_castling_permissions(game_state.castling & ~12);
+        update_castling_permissions(game_state.castling & ~black_castling);
     }
 }
 
 void Board::enpassant_support()
 {
-    int target_square = 0;
-    int ep = game_state.en_passant;
-    target_square = ep + (ep < 7 ? 24 : 32);
+    U8 const ep_split = 7;
+    U8 const double_row_white = 4;
+    U8 const double_row_black = 5;
+
+    U8 ep = game_state.en_passant;
+
+    //find pawn to delete due to ep.
+    U8 target_square = ep + (ep < ep_split ? double_row_white : double_row_black);
+    set_epsquare(ep_none);
     remove_piece(opponent(), PAWN, target_square);
 }
 
-void Board::double_support(int target)
+void Board::double_support(U8 target)
 {
-    
-    set_epsquare(target + (us() == WHITE ? -8 : 8));
-    game_state.half_move_clock = 0;
+    U8 ep_square = (target % BOARD_LENGTH) + (us() == WHITE ? 0 : BOARD_LENGTH);
+    set_epsquare(ep_square);
+    game_state.en_passant = ep_square;
 }
 
-void Board::move_piece(int side, int piece, int from, int to)
+void Board::move_piece(U8 side, U8 piece, U8 from, U8 to)
 {
     remove_piece(side, piece, from);
     put_piece(side, piece, to);
 }
 
-void Board::remove_piece(int side, int piece, int square)
+void Board::remove_piece(U8 side, U8 piece, U8 square)
 {
     pop_bit(bb_pieces[side][piece],square);
     pop_bit(bb_side[side],square);
@@ -126,11 +170,13 @@ void Board::remove_piece(int side, int piece, int square)
     game_state.zobrist_key ^= zobrist_randoms.piece(side, piece, square);
 }
 
-void Board::put_piece(int side, int piece, int square)
+void Board::put_piece(U8 side, U8 piece, U8 square)
 {
     set_bit(bb_pieces[side][piece],square);
     set_bit(bb_side[side],square);
-    int piece_type = !side ? piece + 1 : piece + 7;
+
+   U8 piece_type = piece + 1 + (side == BLACK ? NUM_PIECES : 0);
+
     piece_list[square] = piece_type; 
     game_state.zobrist_key ^= zobrist_randoms.piece(side, piece, square);
 }
@@ -150,7 +196,7 @@ void Board::update_castling_permissions(U8 permissions)
     game_state.zobrist_key ^= zobrist_randoms.castling(game_state.castling);
 }
 
-void Board::set_epsquare(int ep_square)
+void Board::set_epsquare(U8 ep_square)
 {
     game_state.zobrist_key ^= zobrist_randoms.en_passant(game_state.en_passant);
     game_state.en_passant = ep_square;
@@ -160,12 +206,13 @@ void Board::set_epsquare(int ep_square)
 void Board::clear_epsquare()
 {
     game_state.zobrist_key ^= zobrist_randoms.en_passant(game_state.en_passant);
-    game_state.en_passant = 16;
+    game_state.en_passant = ep_none;
     game_state.zobrist_key ^= zobrist_randoms.en_passant(game_state.en_passant);
 }
 
-void Board::gen_moves(int side)
+void Board::gen_moves(U8 side)
 {
+    move_list.clear();
     if(side == 0){
         gen_white_moves();
     }
@@ -177,7 +224,7 @@ void Board::gen_moves(int side)
 
 void Board::gen_white_moves()
 {
-    int side = WHITE;
+    U8 side = WHITE;
     U64 occupied = occupancy();
     U64 enemies = bb_side[BLACK];
 
@@ -192,8 +239,7 @@ void Board::gen_white_moves()
 
 void Board::gen_black_moves()
 {
-    move_list.clear();
-    int side = BLACK;
+    U8 side = BLACK;
     U64 occupied = occupancy();
     U64 enemies = bb_side[WHITE];
 
@@ -209,66 +255,67 @@ void Board::gen_black_moves()
 void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
 {
     U64 pawns = bb_pieces[WHITE][PAWN];
-    while(pawns)
+
+    while(pawns != 0)
     {
-        int from = lsb(pawns);
-        int to = from + 8;
+        U8 from = lsb(pawns);
+        U8 to = from + n_shift;
 
         if(to <= h8 && !get_bit(occupancy, to))
         {
             if(from >= a7) // Promotion
             {
                 //std::cout << "pawn " << from << " -> " << to << "q\n";
-                move_list.add(Move(from, to, PAWN, 8, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, q_promotion, false, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "r\n";
-                move_list.add(Move(from, to, PAWN, 4, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, r_promotion, false, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "n\n";
-                move_list.add(Move(from, to, PAWN, 1, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, b_promotion, false, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "b\n";
-                move_list.add(Move(from, to, PAWN, 2, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, n_promotion, false, false, false, false));
 
             }
             else
             {
                 //std::cout << "pawn " << from << " -> " << to << "\n";
-                move_list.add(Move(from, to, PAWN, false, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, no_promotion, false, false, false, false));
                 
-                if(from >= a2 && from <= h2 && !get_bit(occupancy, to + 8))
+                if(from >= a2 && from <= h2 && !get_bit(occupancy, to + n_shift))
                   //std::cout << "pawn " << from << " -> " << (to + 8) << "\n";
-                    move_list.add(Move(from, (to + 8), PAWN, false, false, true, false, false));
+                    move_list.add(Move(from, (to + n_shift), PAWN, no_promotion, false, true, false, false));
             }
         }
         
         U64 attacks = attack_tables.pawn_attacks[WHITE][from] & enemies;
 
-        while(attacks)
+        while(attacks != 0)
         {
             to = lsb(attacks);
             
             if(from >= a7)
             {
                 //std::cout << "pawn " << from << " -> " << to << "q\n";
-                move_list.add(Move(from, to, PAWN, 8, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, q_promotion, true, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "r\n";
-                move_list.add(Move(from, to, PAWN, 4, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, r_promotion, true, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "n\n";
-                move_list.add(Move(from, to, PAWN, 1, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, b_promotion, true, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "b\n";
-                move_list.add(Move(from, to, PAWN, 2, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, n_promotion, true, false, false, false));
             }
             else
             {
                 //std::cout << "pawn " << from << " -> " << to << "\n";
-                move_list.add(Move(from, to, PAWN, false, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
         }
-        if(game_state.en_passant != 16)
+        if(game_state.en_passant != ep_none)
         {
-            int ep_square = game_state.enpassant_to_square(game_state.en_passant);
-            if(ep_square != -1 && get_bit(attack_tables.pawn_attacks[WHITE][from], ep_square))
+            U8 ep_square = game_state.enpassant_to_square(game_state.en_passant);
+            if(get_bit(attack_tables.pawn_attacks[WHITE][from], ep_square) != 0)
                 //std::cout << "pawn enpassant " << from << " -> " << ep_square << "\n";
-                move_list.add(Move(from, ep_square, PAWN, false, true, false, true, false));
+                move_list.add(Move(from, ep_square, PAWN, no_promotion, true, false, true, false));
         }
         
         pop_bit(pawns, from);
@@ -278,69 +325,69 @@ void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
 void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
 {
     U64 pawns = bb_pieces[BLACK][PAWN];
-    while(pawns)
+    while(pawns != 0)
     {
-        int from = lsb(pawns);
-        int to = from - 8;
+        U8 from = lsb(pawns);
+        U8 to = from - s_shift;
         
-        // Forward moves
+        // forward moves
         if(to >= a1 && !get_bit(occupancy, to))  
         {
-            if(from >= a2 && from <= h2) // Promotion
+            if(from >= a2 && from <= h2) // promotion
             {
                 //std::cout << "pawn " << from << " -> " << to << "q\n";
-                move_list.add(Move(from, to, PAWN, 8, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, q_promotion, false, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "r\n";
-                move_list.add(Move(from, to, PAWN, 4, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, r_promotion, false, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "n\n";
-                move_list.add(Move(from, to, PAWN, 1, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, b_promotion, false, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "b\n";
-                move_list.add(Move(from, to, PAWN, 2, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, n_promotion, false, false, false, false));
             }
             else
             {
                 //std::cout << "pawn " << from << " -> " << to << "\n";
-                move_list.add(Move(from, to, PAWN, false, false, false, false, false));
+                move_list.add(Move(from, to, PAWN, no_promotion, false, false, false, false));
                 // Double move from 7th rank
-                if(from >= a7 && from <= h7 && !get_bit(occupancy, to - 8))
+                if(from >= a7 && from <= h7 && !get_bit(occupancy, to - s_shift))
                 {
                     //std::cout << "pawn " << from << " -> " << (to - 8) << "\n";
-                    move_list.add(Move(from, (to - 8), PAWN, false, false, true, false, false));
+                    move_list.add(Move(from, (to - s_shift), PAWN, no_promotion, false, true, false, false));
                 }
             }
         }
         
-        // Capture moves
+        // capture moves
         U64 attacks = attack_tables.pawn_attacks[BLACK][from] & enemies;
-        while(attacks)
+        while(attacks != 0)
         {
             to = lsb(attacks);
-            if(from >= a2 && from <= h2) // Promotion capture
+            if(from >= a2 && from <= h2) // promotion capture
             {
                 //std::cout << "pawn " << from << " -> " << to << "q\n";
-                move_list.add(Move(from, to, PAWN, 8, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, q_promotion, true, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "r\n";
-                move_list.add(Move(from, to, PAWN, 4, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, r_promotion, true, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "n\n";
-                move_list.add(Move(from, to, PAWN, 1, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, b_promotion, true, false, false, false));
                 //std::cout << "pawn " << from << " -> " << to << "b\n";
-                move_list.add(Move(from, to, PAWN, 2, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, n_promotion, true, false, false, false));
             }
             else
             {
                 //std::cout << "pawn " << from << " -> " << to << "\n";
-                move_list.add(Move(from, to, PAWN, false, true, false, false, false));
+                move_list.add(Move(from, to, PAWN, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
         }
-        
-        if(game_state.en_passant != 16)
+        // en passant
+        if(game_state.en_passant != ep_none)
         {
             int ep_square = game_state.enpassant_to_square(game_state.en_passant);
-            if(ep_square != -1 && get_bit(attack_tables.pawn_attacks[BLACK][from], ep_square))
+            if(get_bit(attack_tables.pawn_attacks[BLACK][from], ep_square) != 0)
             {
                 //std::cout << "pawn enpassant " << from << " -> " << ep_square << "\n";
-                move_list.add(Move(from, ep_square, PAWN, false, true, false, true, false));
+                move_list.add(Move(from, ep_square, PAWN, no_promotion, true, false, true, false));
             }
         }
         
@@ -348,32 +395,30 @@ void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
     }
 }
 
-void Board::gen_knight_moves(int side, U64 enemies)
+void Board::gen_knight_moves(U8 side, U64 enemies)
 {
-    U64 knights;
-    knights = (side == WHITE) ? bb_pieces[WHITE][KNIGHT] : bb_pieces[BLACK][KNIGHT];
+    U64 knights = (side == WHITE) ? bb_pieces[WHITE][KNIGHT] : bb_pieces[BLACK][KNIGHT];
     //std::string color = (side == WHITE) ? "white" : "black";
 
-    while(knights)
+    while(knights != 0)
     {
-        int from = lsb(knights);
+        U8 from = lsb(knights);
 
         U64 attacks = attack_tables.knight_attacks[from] & ~bb_side[side];
         
-        while(attacks)
+        while(attacks != 0)
         {
-            int to = lsb(attacks);
+            U8 to = lsb(attacks);
 
             if(!get_bit(enemies, to))
             {
                 //std::cout << "knight " << from << " -> " << to << std::endl;
-                move_list.add(Move(from, to, KNIGHT, false, false, false, false, false));
+                move_list.add(Move(from, to, KNIGHT, no_promotion, false, false, false, false));
             }
             else
             {
-                int enemy_captured = piece_list[to];
                 //std::cout << "knight " << from << " -> " << to << " captures " << enemy_captured << std::endl;
-                move_list.add(Move(from, to, KNIGHT, false, true, false, false, false));
+                move_list.add(Move(from, to, KNIGHT, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
         }
@@ -381,117 +426,125 @@ void Board::gen_knight_moves(int side, U64 enemies)
     }
 }
 
-void Board::gen_king_moves(int side, U64 occupancy, U64 enemies)
+void Board::gen_king_moves(U8 side, U64 occupancy, U64 enemies)
 {
-    U64 king;
-    king = (side == WHITE) ? bb_pieces[WHITE][KING] : bb_pieces[BLACK][KING];
+    U64 king = (side == WHITE) ? bb_pieces[WHITE][KING] : bb_pieces[BLACK][KING];
     //std::string color = (side == WHITE) ? "white" : "black";
 
-    int from = lsb(king);
+    U8 from = lsb(king);
 
     U64 attacks = attack_tables.king_attacks[from] & ~bb_side[side];
 
-    while(attacks)
+    while(attacks!= 0)
     {
-        int to = lsb(attacks);
+        U8 to = lsb(attacks);
 
         if(!get_bit(enemies, to))
         {
             //std::cout << "king " << from << " -> " << to << std::endl;
-            move_list.add(Move(from, to, KING, false, false, false, false, false));
+            move_list.add(Move(from, to, KING, no_promotion, false, false, false, false));
         }
         else
         {
-            int enemy_captured = piece_list[to];
             //std::cout << "king " << from << " -> " << to << " captures " << enemy_captured << std::endl;
-            move_list.add(Move(from, to, KING, false, true, false, false, false));
+            move_list.add(Move(from, to, KING, no_promotion, true, false, false, false));
         }
 
         pop_bit(attacks, to);
     }
 
     // Castling moves
-    if(side == WHITE)
-    {
-        if(wk & game_state.castling)
-        {
-            if(!get_bit(occupancy, g1) && !get_bit(occupancy, f1))
-            {
-                if(!is_square_attacked(g1,BLACK) && !is_square_attacked(e1,BLACK) && !is_square_attacked(f1,BLACK))
-                {
-                    //std::cout << "king " << e1 << " -> " << g1 << std::endl;
-                    move_list.add(Move(e1, g1, KING, false, false, false, false, true));
-                }
-            }
-        }
+    gen_castling_moves(side, occupancy);
+}
 
-        if(wq & game_state.castling)
-        {
-            if(!get_bit(occupancy, b1) && !get_bit(occupancy, c1) && !get_bit(occupancy, d1))
-            {
-                if(!is_square_attacked(e1,BLACK) && !is_square_attacked(c1,BLACK) && !is_square_attacked(d1,BLACK))
-                {
-                    //std::cout << "king " << e1 << " -> " << c1 << std::endl;
-                    move_list.add(Move(e1, c1, KING, false, false, false, false, true));
-                }
-            }
-        }
-    }
-    else
+void Board::gen_castling_moves(U8 side, U64 occupancy) {
+    if(side == WHITE) 
     {
-        if(bk & game_state.castling)
-        {
-            if(!get_bit(occupancy, g8) && !get_bit(occupancy, f8))
-            {
-                if(!is_square_attacked(g8,WHITE) && !is_square_attacked(e8,WHITE) && !is_square_attacked(f8,WHITE))
-                {
-                    //std::cout << "king " << e8 << " -> " << g8 << std::endl;
-                    move_list.add(Move(e8, g8, KING, false, false, false, false, true));
-                }
-            }
-        }
-
-        if(bq & game_state.castling)
-        {
-            if(!get_bit(occupancy, b8) && !get_bit(occupancy, c8) && !get_bit(occupancy, d8))
-            {
-                if(!is_square_attacked(e8,WHITE) && !is_square_attacked(c8,WHITE) && !is_square_attacked(d8,WHITE))
-                {
-                    //std::cout << "king " << e8 << " -> " << c8 << std::endl;
-                    move_list.add(Move(e8, c8, KING, false, false, false, false, true));
-                }
-            }
-        }
+        try_white_kingside_castle(occupancy);
+        try_white_queenside_castle(occupancy);
+    } 
+    else 
+    {
+        try_black_kingside_castle(occupancy);
+        try_black_queenside_castle(occupancy);
     }
 }
 
-void Board::gen_bishop_moves(int side, U64 occupancy, U64 enemies)
+void Board::try_white_kingside_castle(U64 occupancy)
 {
-    U64 bishops;
-    bishops = (side == WHITE) ? bb_pieces[WHITE][BISHOP] : bb_pieces[BLACK][BISHOP];
-    //std::string color = (side == WHITE) ? "white" : "black";
+    if ((wk & game_state.castling) == 0) return;
+    if (!get_bit(bb_pieces[WHITE][ROOK], h1)) return; 
+    if (get_bit(occupancy, f1) || get_bit(occupancy, g1)) return;
+    if (is_square_attacked(e1, BLACK) || 
+        is_square_attacked(f1, BLACK) || 
+        is_square_attacked(g1, BLACK)) return;
 
-    while(bishops)
+    move_list.add(Move(e1, g1, KING, no_promotion, false, false, false, true));
+}
+
+
+void Board::try_white_queenside_castle(U64 occupancy)
+{
+    if ((wq & game_state.castling) == 0) return;
+    if (!get_bit(bb_pieces[WHITE][ROOK], a1)) return; 
+    if (get_bit(occupancy, b1) || get_bit(occupancy, c1) || get_bit(occupancy, d1)) return;
+    if (is_square_attacked(d1, BLACK) || 
+        is_square_attacked(c1, BLACK) || 
+        is_square_attacked(e1, BLACK)) return;
+
+    move_list.add(Move(e1, c1, KING, no_promotion, false, false, false, true));
+}
+
+
+void Board::try_black_kingside_castle(U64 occupancy)
+{
+    if ((bk & game_state.castling) == 0) return;
+    if (!get_bit(bb_pieces[BLACK][ROOK], h8)) return; 
+    if (get_bit(occupancy, f8) || get_bit(occupancy, g8)) return;
+    if (is_square_attacked(e8, WHITE) || 
+        is_square_attacked(f8, WHITE) || 
+        is_square_attacked(g8, WHITE)) return;
+
+    move_list.add(Move(e8, g8, KING, no_promotion, false, false, false, true));
+}
+
+
+void Board::try_black_queenside_castle(U64 occupancy)
+{
+    if ((bq & game_state.castling) == 0) return;
+    if (!get_bit(bb_pieces[BLACK][ROOK], a8)) return; 
+    if (get_bit(occupancy, b8) || get_bit(occupancy, c8) || get_bit(occupancy, d8)) return;
+    if (is_square_attacked(d8, WHITE) || 
+        is_square_attacked(c8, WHITE) || 
+        is_square_attacked(e8, WHITE)) return;
+
+    move_list.add(Move(e8, c8, KING, no_promotion, false, false, false, true));
+}
+
+void Board::gen_bishop_moves(U8 side, U64 occupancy, U64 enemies)
+{
+    U64 bishops = ((side == WHITE) ? bb_pieces[WHITE][BISHOP] : bb_pieces[BLACK][BISHOP]);
+
+    while(bishops != 0)
     {
-        int from = lsb(bishops);
+        U8 from = lsb(bishops);
 
         U64 attacks = attack_tables.get_bishop_attacks(from, occupancy);
         attacks &= ~bb_side[side];
-        
-        while(attacks)
+
+        while(attacks != 0)
         {
-            int to = lsb(attacks);
+            U8 to = lsb(attacks);
 
             if(!get_bit(enemies, to))
             {
-                //std::cout << "bishop " << from << " -> " << to << std::endl;
-                move_list.add(Move(from, to, BISHOP, false, false, false, false, false));
+                //std::cout << "bishop " << (int)from << " -> " << (int)to << std::endl;
+                move_list.add(Move(from, to, BISHOP, no_promotion, false, false, false, false));
             }
             else
             {
-                int enemy_captured = piece_list[to];
-                //std::cout << "bishop " << from << " -> " << to << " captures " << enemy_captured << std::endl;
-                move_list.add(Move(from, to, BISHOP, false, true, false, false, false));
+                //std::cout << "bishop " << (int)from << " -> " << (int)to << " captures " << std::endl;
+                move_list.add(Move(from, to, BISHOP, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
         }
@@ -499,33 +552,31 @@ void Board::gen_bishop_moves(int side, U64 occupancy, U64 enemies)
     }
 }
 
-void Board::gen_rook_moves(int side, U64 occupancy, U64 enemies)
+void Board::gen_rook_moves(U8 side, U64 occupancy, U64 enemies)
 {
-    U64 rooks;
-    rooks = (side == WHITE) ? bb_pieces[WHITE][ROOK] : bb_pieces[BLACK][ROOK];
+    U64 rooks = (side == WHITE) ? bb_pieces[WHITE][ROOK] : bb_pieces[BLACK][ROOK];
     //std::string color = (side == WHITE) ? "white" : "black";
 
-    while(rooks)
+    while(rooks != 0)
     {
-        int from = lsb(rooks);
+        U8 from = lsb(rooks);
 
         U64 attacks = attack_tables.get_rook_attacks(from, occupancy);
         attacks &= ~bb_side[side];
         
-        while(attacks)
+        while(attacks != 0)
         {
-            int to = lsb(attacks);
+            U8 to = lsb(attacks);
 
             if(!get_bit(enemies, to))
             {
-                //std::cout << "rook " << from << " -> " << to << std::endl;
-                move_list.add(Move(from, to, ROOK, false, false, false, false, false));
+                //std::cout << "rook " << (int)from << " -> " << (int)to << std::endl;
+                move_list.add(Move(from, to, ROOK, no_promotion, false, false, false, false));
             }
             else
             {
-                int enemy_captured = piece_list[to];
-                //std::cout << "rook " << from << " -> " << to << " captures " << enemy_captured << std::endl;
-                move_list.add(Move(from, to, ROOK, false, true, false, false, false));
+                //std::cout << "rook " << (int)from << " -> " << (int)to << " captures " << std::endl;
+                move_list.add(Move(from, to, ROOK, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
         }
@@ -533,34 +584,34 @@ void Board::gen_rook_moves(int side, U64 occupancy, U64 enemies)
     }
 }
 
-void Board::gen_queen_moves(int side, U64 occupancy, U64 enemies)
-{
-    U64 queens;
-    queens = (side == WHITE) ? bb_pieces[WHITE][QUEEN] : bb_pieces[BLACK][QUEEN];
-    //std::string color = (side == WHITE) ? "white" : "black";
 
-    while(queens)
+
+void Board::gen_queen_moves(U8 side, U64 occupancy, U64 enemies)
+{
+    U64 queens = ((side == WHITE) ? bb_pieces[WHITE][QUEEN] : bb_pieces[BLACK][QUEEN]);
+    std::string color = (side == WHITE) ? "white" : "black";
+
+    while(queens != 0)
     {
-        int from = lsb(queens);
+        U8 from = lsb(queens);
 
         // Queen moves like both rook and bishop
         U64 attacks = attack_tables.get_rook_attacks(from, occupancy) | attack_tables.get_bishop_attacks(from, occupancy);
         attacks &= ~bb_side[side];
         
-        while(attacks)
+        while(attacks != 0)
         {
-            int to = lsb(attacks);
+            U8 to = lsb(attacks);
 
             if(!get_bit(enemies, to))
             {
-                //std::cout << "queen " << from << " -> " << to << std::endl;
-                move_list.add(Move(from, to, QUEEN, false, false, false, false, false));
+                //std::cout << "queen " << from << (int)to << std::endl;
+                move_list.add(Move(from, to, QUEEN, no_promotion, false, false, false, false));
             }
             else
             {
-                int enemy_captured = piece_list[to];
-                //std::cout << "queen " << from << " -> " << to << " captures " << enemy_captured << std::endl;
-                move_list.add(Move(from, to, QUEEN, false, true, false, false, false));
+                //std::cout << "queen " << from << (int)to <<  std::endl;
+                move_list.add(Move(from, to, QUEEN, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
         }
@@ -568,29 +619,21 @@ void Board::gen_queen_moves(int side, U64 occupancy, U64 enemies)
     }
 }
 
-bool Board::is_square_attacked(int square, int side)
+bool Board::is_square_attacked(U8 square, U8 side)
 {
     U64 board_occupancy = occupancy();
 
-    if(attack_tables.pawn_attacks[side ^ 1][square] & bb_pieces[side][PAWN]) return true;
+    if((attack_tables.pawn_attacks[side ^ 1][square] & bb_pieces[side][PAWN]) != 0) return true;
     
-    if(attack_tables.knight_attacks[square] & bb_pieces[side][KNIGHT]) return true;
+    if((attack_tables.knight_attacks[square] & bb_pieces[side][KNIGHT]) != 0) return true;
     
-    if(attack_tables.king_attacks[square] & bb_pieces[side][KING]) return true;
+    if((attack_tables.king_attacks[square] & bb_pieces[side][KING]) != 0) return true;
     
-    if(attack_tables.get_bishop_attacks(square, board_occupancy) & bb_pieces[side][BISHOP]) return true;
+    if((attack_tables.get_bishop_attacks(square, board_occupancy) & bb_pieces[side][BISHOP]) != 0) return true;
     
-    if(attack_tables.get_rook_attacks(square, board_occupancy) & bb_pieces[side][ROOK]) return true;
+    if((attack_tables.get_rook_attacks(square, board_occupancy) & bb_pieces[side][ROOK])!= 0) return true;
     
-    if(attack_tables.get_queen_attacks(square, board_occupancy) & bb_pieces[side][QUEEN]) return true;
+    if((attack_tables.get_queen_attacks(square, board_occupancy) & bb_pieces[side][QUEEN])!= 0) return true;
     
     return false;
 }
-
-
-
-
-
-
-
-

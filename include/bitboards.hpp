@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <iostream>
 #include "zobrist.hpp"
 #include "types.hpp"
 #include "attacks.hpp"
@@ -8,27 +7,27 @@
 #include <array>
 
 
-inline bool get_bit(const U64 &bitboard, int s) 
+inline bool get_bit(const U64 &bitboard, U8 square) 
 {
-    return bitboard & (1ULL << s);
+    return (bitboard & (1ULL << square)) != 0;
 }
 
-inline void set_bit(U64 &bitboard, int s) 
+inline void set_bit(U64 &bitboard, U8 square) 
 {
-    bitboard |= (1ULL << s);
+    bitboard |= (1ULL << square);
 }
 
-inline void pop_bit(U64 &bitboard, int s) 
+inline void pop_bit(U64 &bitboard, U8 square) 
 {
-    bitboard &= ~(1ULL << s);
+    bitboard &= ~(1ULL << square);
 }
 
-inline int lsb(U64 bitboard) 
+inline U8 lsb(U64 bitboard) 
 {
     return __builtin_ctzll(bitboard);
 }
 
-inline int bits_in_bitboard(U64 bitboard) {
+inline U8 bits_in_bitboard(U64 bitboard) {
     return __builtin_popcountll(bitboard);  
 } 
 
@@ -36,46 +35,49 @@ void print_board(U64 bitboard);
 
 struct GameState 
 {
-    U8 active_color;
-    U8 castling;
-    U8 half_move_clock;
-    U8 en_passant;
-    U16 fullmove_number;
-    U64 zobrist_key;
+    U8 active_color = WHITE;
+    U8 castling = all_castling;
+    U8 half_move_clock = 0;
+    U8 en_passant = ep_none;
+    U16 fullmove_number = 1;
+    U64 zobrist_key = 0;
     Move move;
 
     GameState();
     void clear();
-    int enpassant_to_square(int enpassant_num);
+    U8 enpassant_to_square(U8 enpassant_num);
+    void print_game_state();
 };
 
 class History 
 {
-    private:
-        GameState list[MAX_MOVES];
-        int count;
+    public:
+        std::array<GameState, MAX_MOVES> list;
+        U16 count = 0;
 
     public:
         History();
         void push(GameState game_state);
-        std::optional<GameState> pop();
+        void pop();
         void clear();
-        size_t len();
+        U16 len();
+
         GameState& get_ref(size_t index);
 };
 
 class Board 
 {
     public:
-        U64 bb_pieces[NUM_SIDES][NUM_PIECES] = {0ULL};
-        U64 bb_side[NUM_SIDES] = {0ULL};
-        int piece_list[NUM_SQUARES] = {0};
+        std::array<std::array<U64, NUM_PIECES>, NUM_SIDES> bb_pieces = {0ULL};
+        std::array<U64, NUM_SIDES> bb_side = {0ULL};
+        std::array<U8, NUM_SQUARES> piece_list = {NONE};
+
         GameState game_state;
         History history;
         ZobristRandoms zobrist_randoms;
         Move move;
-        AttackTables attack_tables;
         MoveList move_list;
+        AttackTables attack_tables;
         
     public:
         Board();
@@ -83,9 +85,7 @@ class Board
         void init_piece_list();
         void init_pieces_per_side_bitboard();
         void init();
-
         U64 init_zobrist_key();
-
 
         //support functions
         U64 occupancy();
@@ -93,50 +93,58 @@ class Board
         
         U8 us();
         U8 opponent();
-
-        int king_sqaure(int side);
-        U64& get_piece(int side, int Piece);
-        U64& get_side(int side);
+        U8 king_sqaure(U8 side);
+        U64& get_piece(U8 side, U8 piece);
+        U64& get_side(U8 side);
 
         void fen_parser(const std::string& fen);
         void load_fen(const std::string& fen);
         void print_piece_list();
 
-
         //move functions gen_moves.cpp
-        void move_piece(int side, int piece, int from, int to);
-        void remove_piece(int side, int piece, int square);
-        void put_piece(int side, int piece, int square);
+        void move_piece(U8 side, U8 piece, U8 from, U8 to);
+        void remove_piece(U8 side, U8 piece, U8 square);
+        void put_piece(U8 side, U8 piece, U8 square);
         void swap_sides();
         void update_castling_permissions(U8 permissions);
-        void set_epsquare(int ep_square);
+        void set_epsquare(U8 ep_square);
         void clear_epsquare();
 
-        void make_move(const Move move);
-        void unmake_move(const Move move);
+        void make_move(Move move);
+        void unmake_move(Move move);
 
         void gen_white_moves();
         void gen_black_moves();
-        void gen_moves(int side);
+        void gen_moves(U8 side);
 
         void gen_white_pawn_moves(U64 occupancy, U64 enemies);
         void gen_black_pawn_moves(U64 occupancy, U64 enemies);
 
-        void gen_knight_moves(int side, U64 enemies);
-        void gen_bishop_moves(int side, U64 occupancy, U64 enemies);
-        void gen_rook_moves(int side, U64 occupancy, U64 enemies);
-        void gen_queen_moves(int side, U64 occupancy, U64 enemies);
-        void gen_king_moves(int side, U64 occupancy, U64 enemies);
-        bool is_square_attacked(int square, int side); 
+        void gen_knight_moves(U8 side, U64 enemies);
+        void gen_bishop_moves(U8 side, U64 occupancy, U64 enemies);
+        void gen_rook_moves(U8 side, U64 occupancy, U64 enemies);
+        void gen_queen_moves(U8 side, U64 occupancy, U64 enemies);
+        std::string square_to_algebraic(U8 square);
+
+        void gen_king_moves(U8 side, U64 occupancy, U64 enemies);
+        void gen_castling_moves(U8 side, U64 occupancy);
+        void try_white_kingside_castle(U64 occupancy);
+        void try_white_queenside_castle(U64 occupancy);
+        void try_black_kingside_castle(U64 occupancy);
+        void try_black_queenside_castle(U64 occupancy);
+        void castling_permissions_support(U8 piece, U8 from, U8 side);
+
+        bool is_square_attacked(U8 square, U8 side); 
+        bool is_check(U8 side);
+        void under_check();
         
         void enpassant_support();
-        void castling_support(int king_target);
-        void double_support(int target);
-        int promotion_support();
-        void move_support(int side, int piece, int target);
+        void castling_support(U8 king_target);
+        void double_support(U8 target);
+        static U8 promotion_support(U8 promotion);
+        void move_support(U8 side, U8 piece, U8 target, U8 source, const Move& move);
+        void capture_support(U8 square);
 
-        bool has_bishop_pair(int side);
-        bool is_white_square(int square);
-        bool material_to_force_checkmate(); // incomplete
-        
+        bool has_bishop_pair(U8 side);
+        static bool is_white_square(U8 square); 
 };
