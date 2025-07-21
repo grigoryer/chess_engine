@@ -49,6 +49,7 @@ struct Move {
     //other
     bool is_promotion() const;
     bool is_quiet() const;
+    bool is_special() const;
     bool is_empty() const;
 
     // Comparison operators

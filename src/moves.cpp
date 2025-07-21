@@ -153,9 +153,14 @@ bool Move::is_quiet() const
     return !is_capture() && !is_double() && !is_enpassant() && !is_castling() && !is_promotion();
 }
 
+bool Move::is_special() const 
+{
+    return is_enpassant() || is_castling() || is_promotion();
+}
+
 void Move::print_move(U8 active_color) const 
 {
-    std::cout << "\nMove: " << n_to_piece(get_piece(),active_color);
+    std::cout << "\nMove: " << n_to_piece(get_piece(), active_color);
 
     if(is_capture()){
         std::cout << "x";
@@ -164,6 +169,7 @@ void Move::print_move(U8 active_color) const
     std::cout << n_to_sq(get_target());
 
     if(is_promotion()){
+        std::cout << "=";
         switch(get_promoted())
         {
             case(n_promotion): std::cout << (active_color == WHITE ? "N" : "n"); break;
@@ -174,6 +180,9 @@ void Move::print_move(U8 active_color) const
         }
     }
 
+    if(is_enpassant()){
+        std::cout << " e.p.";
+    }
     std::cout << "\n";
 }
 
@@ -189,14 +198,20 @@ std::string Move::n_to_sq(U8 num)
     return std::string(1, file_letter) + rank_number;
 }
 
-std::string Move::n_to_piece(U8 num, U8 active_color)
-{   
-    const U8 unique_pieces = (NUM_PIECES * NUM_SIDES);
-    if((active_color) != 0) { num += NUM_PIECES; }
+std::string Move::n_to_piece(U8 piece_type, U8 active_color) {
 
-    std::array<std::string, unique_pieces> piece = {"K", "Q", "R", "B", "N", "", 
-                            "k", "q", "r", "b", "n", ""};
-    return piece.at(num);
+    piece_type  +=  ((active_color == WHITE) ? 0 : NUM_PIECES);
+
+    std::array<std::string, 12> pieces = {
+        "K", "Q", "R", "B", "N", "",  // 0-5: white pieces
+        "k", "q", "r", "b", "n", ""   // 6-11: black pieces
+    };
+    
+    if (piece_type >= 12) {
+        return "?"; // Invalid piece type
+    }
+    
+    return pieces[piece_type];
 }
 
 void MoveList::add(const Move move) {

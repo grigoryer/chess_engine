@@ -35,7 +35,7 @@ const U8 e_shift = 1;
 const U8 w_shift = 1;
 
 const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string CUSTOM_FEN = "8/8/8/8/8/8/2P5/3B4 w - - 0 1";
+const std::string CUSTOM_FEN = "qrqrbnbn/PPPPPPPP/7K/8/8/7k/pppppppp/QRQRBNBN w KQkq - 0 1";
 
 const std::string empty_board =  "8/8/8/8/8/8/8/8 w - - ";
 const std::string start_position =  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
@@ -78,19 +78,10 @@ enum Square :U8
     a8,b8,c8,d8,e8,f8,g8,h8
 };
 
-enum PieceList :U8 { 
-    NONE = 0,
-    K = 1,
-    Q = 2,
-    R = 3,
-    B = 4,
-    N = 5,
-    P = 6,
-    k = 7,
-    q = 8,
-    r = 9,
-    b = 10,
-    n = 11,
-    p = 12
+enum PieceList : U8 
+{
+    NONE = 255, 
+    K = 0, Q = 1, R = 2, B = 3, N = 4, P = 5,
+    k = 6, q = 7, r = 8, b = 9, n = 10, p = 11
 };
 

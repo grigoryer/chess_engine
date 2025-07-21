@@ -29,12 +29,13 @@ void print_board(U64 bitboard)
     std::cout << "#: " << bitboard << '\n';
 }
 
+
 void Board::print_piece_list() 
 {
 
     constexpr std::array<char, 13> piece_to_char = {
-        '.', 'K', 'Q', 'R', 'B', 'N', 'P',
-        'k', 'q', 'r', 'b', 'n', 'p'
+        'K', 'Q', 'R', 'B', 'N', 'P',
+        'k', 'q', 'r', 'b', 'n', 'p', '.',
     };
     
     std::cout << "\n";
@@ -45,7 +46,9 @@ void Board::print_piece_list()
         for (int file = 0; file <= MAX_FILE; file++) 
         {
             int square = (rank * BOARD_LENGTH) + file;
-            char piece_char = piece_to_char[piece_list[square]];
+            U8 piece = piece_list[square];
+            
+            char piece_char = (piece <= p) ? piece_to_char[piece] : piece_to_char[12];
             std::cout << piece_char << " ";
         }
         std::cout << "\n";
@@ -64,6 +67,8 @@ Board::Board()
 
 void Board::fen_parser(const std::string& fen)
 {
+    std::fill(piece_list.begin(), piece_list.end(), NONE);
+
     static constexpr int fen_position = 0;
     static constexpr int fen_color = 1;
     static constexpr int fen_castling = 2;
@@ -205,29 +210,30 @@ U64 Board::init_zobrist_key()
 
 void Board::init_piece_list()
 {
-    for(int piece_type = KING; piece_type <= PAWN; piece_type++)
-    {  
-        U64 bb_w = bb_pieces[WHITE][piece_type];
-        while(bb_w != 0)
+    for (U8 piece_type = KING; piece_type <= PAWN; ++piece_type)
+    {
+        U64 bb_white = bb_pieces[WHITE][piece_type];
+        while (bb_white)
         {
-            int square = lsb(bb_w);
-            piece_list[square] = (PieceList)(K + piece_type);
-            pop_bit(bb_w, square);
+            U8 square = lsb(bb_white);
+            piece_list[square] = static_cast<PieceList>(piece_type); // K–P
+            pop_bit(bb_white, square);
         }
-        
-        U64 bb_b = bb_pieces[BLACK][piece_type];
-        while(bb_b != 0)
+
+        U64 bb_black = bb_pieces[BLACK][piece_type];
+        while (bb_black)
         {
-            int square = lsb(bb_b);
-            piece_list[square] = (PieceList)(k + piece_type);
-            pop_bit(bb_b, square);
+            U8 square = lsb(bb_black);
+            piece_list[square] = static_cast<PieceList>(piece_type + NUM_PIECES); // k–p
+            pop_bit(bb_black, square);
         }
     }
 }
 
+
 void Board::init_pieces_per_side_bitboard()
 {
-    for(int piece = 0; piece < NUM_PIECES; piece++)
+    for(int piece = KING; piece <= PAWN; piece++)
     {
         bb_side[WHITE] |= bb_pieces[WHITE][piece];
         bb_side[BLACK] |= bb_pieces[BLACK][piece];
@@ -311,6 +317,22 @@ void Board::load_fen(const std::string& fen)
 }
 
 
+U8 Board::enpassant_to_square(U8 enpassant_num)
+{
+    if (enpassant_num < 0 || enpassant_num >= ep_none) 
+    {
+        return ep_none;
+    }
+    
+    if (enpassant_num <= ep_white_h) 
+    {
+        return a3 + enpassant_num;
+    }
+    
+    return a6 + (enpassant_num - ep_black_a);
+}
+
+
 /*=========================
     GAME STATE STRUCT
 =========================*/
@@ -329,21 +351,6 @@ void GameState::clear()
     en_passant = ep_none;          
     fullmove_number = 0;
     zobrist_key = 0;
-}
-
-U8 GameState::enpassant_to_square(U8 enpassant_num)
-{
-    if (enpassant_num < 0 || enpassant_num >= ep_none) 
-    {
-        return ep_none; // invalid input
-    }
-    
-    if (enpassant_num <= ep_white_h) 
-    {
-        return a2 + enpassant_num;
-    }
-    
-    return a6 + (enpassant_num - BOARD_LENGTH);
 }
 
 void GameState::print_game_state() 
@@ -366,12 +373,13 @@ History::History()
 
 void History::push(GameState game_state)
 {
-    list.at(count) = game_state;
+    list[count] = game_state;
     count++;
 }
 
 void History::pop() 
 {
+    if(count == 0) { return; } 
     count -= 1;
 }
 
@@ -380,12 +388,17 @@ void History::clear()
     count = 0;
 }
  
-U16 History::len() //NOLINT
+U16 History::len()
 {
     return count;
 }
 
 GameState& History::get_ref(size_t index)
 {
-    return list.at(index);
+    return list[index];
+}
+
+GameState History::top()
+{
+    return list[count - 1];
 }
