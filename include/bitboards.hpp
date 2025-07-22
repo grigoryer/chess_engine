@@ -133,7 +133,7 @@ class Board
         void ep_support(Move move, U8 side, U8 from, U8 to);
         void double_support(U8 side, U8 from, U8 to);
         void update_halfclock(bool is_capture, bool is_promotion, U8 piece);
-        void promotion_support (const Move move, U8 side, U8 from, U8 to);
+        void promotion_support (Move move, U8 side, U8 from, U8 to);
 
         //unmake move
         void unmake_move();
@@ -146,9 +146,15 @@ class Board
         bool is_square_attacked(U8 square, U8 side); 
         bool is_check(U8 side);
         void under_check();
-        bool has_bishop_pair(U8 side);
         static bool is_white_square(U8 square); 
         U8 piece_to_piecelist(U8 piece_list_type);
         U8 piecelist_to_piece(U8 piece);
-        U8 enpassant_to_square(U8 enpassant_num);
+        static U8 enpassant_to_square(U8 enpassant_num);
+
+        //draws
+        bool is_draw();
+        bool is_fifty_move_rule();
+        bool is_threefold_repetition();
+        bool is_insufficient_material();
+        bool has_bishop_pair(U8 side);
 };

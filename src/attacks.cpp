@@ -216,8 +216,8 @@ U64 AttackTables::mask_bishop_attacks(U8 square)
     int rank = 0;
     int file = 0;
 
-    int target_rank = square / 8;
-    int target_file = square % 8;
+    int target_rank = square / BOARD_LENGTH;
+    int target_file = square % BOARD_LENGTH;
 
     // north east
     for(rank = target_rank + 1, file = target_file + 1; rank < n_wall && file < e_wall; rank++, file++) { bishop_mask |= 1ULL << (rank * BOARD_LENGTH + file); }
@@ -304,25 +304,25 @@ U64 AttackTables::gen_bishop_attacks_onfly(U8 square, U64 occupancy)
     for (rank = target_rank + 1, file = target_file + 1; rank <= n_wall && file <= e_wall; rank++, file++) 
     {
         attacks |= (1ULL << (rank * BOARD_LENGTH + file ));
-        if (occupancy & (1ULL << (rank * BOARD_LENGTH + file))) { break; }
+        if ((occupancy & (1ULL << (rank * BOARD_LENGTH + file))) != 0) { break; }
     }
     // south west
     for (rank = target_rank - 1, file = target_file - 1; rank >= s_wall && file >= w_wall; rank--, file--) 
     {
         attacks |= (1ULL << (rank * BOARD_LENGTH + file ));
-        if (occupancy & (1ULL << (rank * BOARD_LENGTH + file))) { break; }
+        if ((occupancy & (1ULL << (rank * BOARD_LENGTH + file))) != 0) { break; }
     }
     // north west
     for (rank = target_rank + 1, file = target_file - 1; rank <= n_wall && file >= w_wall; rank++, file--) 
     {
         attacks |= (1ULL << (rank * BOARD_LENGTH + file ));
-        if (occupancy & (1ULL << (rank * BOARD_LENGTH + file))) { break; }
+        if ((occupancy & (1ULL << (rank * BOARD_LENGTH + file))) != 0) { break; }
     }
     // south east
     for (rank = target_rank - 1, file = target_file + 1; rank >= s_wall && file <= e_wall; rank--, file++) 
     {
         attacks |= (1ULL << (rank * BOARD_LENGTH + file ));
-        if (occupancy & (1ULL << (rank * BOARD_LENGTH + file))) { break; }
+        if ((occupancy & (1ULL << (rank * BOARD_LENGTH + file))) != 0) { break; }
     }
 
     return attacks;

@@ -3,7 +3,8 @@
 #include <array>
 
 // Move struct with bit encoding
-struct Move {
+class Move {
+private:
     U32 move;
     
     // Bit masks for extraction
@@ -15,7 +16,8 @@ struct Move {
     static const U32 DOUBLE_MASK = 0x200000;    // 1 bit: 21
     static const U32 ENPASSANT_MASK = 0x400000; // 1 bit: 22
     static const U32 CASTLING_MASK = 0x800000;  // 1 bit: 23
-    
+
+public:
     // Constructors
     Move();
     Move(U8 source, U8 target, U8 piece, U8 promoted = 0, 
@@ -55,15 +57,16 @@ struct Move {
     // Comparison operators
     void print_move(U8 active_color) const;
     static std::string n_to_sq(U8 num);
-    static std::string n_to_piece(U8 num, U8 active_color);
+    static std::string n_to_piece(U8 piece_type, U8 active_color);
+
     U32 get_raw() const;
 };
 
-struct MoveList
+class MoveList
 {
-    std::array<Move, MAX_HISTORY> moves = {};
+public:
     int count = 0;
-
+    std::array<Move, MAX_HISTORY> moves = {};
     void add(Move move);
     void clear();
     bool is_move_empty(U16 index) const;

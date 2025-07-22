@@ -175,7 +175,7 @@ void Move::print_move(U8 active_color) const
             case(n_promotion): std::cout << (active_color == WHITE ? "N" : "n"); break;
             case(b_promotion): std::cout << (active_color == WHITE ? "B" : "b"); break;
             case(r_promotion): std::cout << (active_color == WHITE ? "R" : "r"); break;
-            case(q_promotion): std::cout << (active_color == WHITE ? "Q" : "q"); break;
+            case(q_promotion): std::cout << (active_color == WHITE ? "Q" : "q"); break; //NOLINT
             default: std::cout << (active_color == WHITE ? "Q" : "q"); break; // fallback
         }
     }
@@ -200,14 +200,14 @@ std::string Move::n_to_sq(U8 num)
 
 std::string Move::n_to_piece(U8 piece_type, U8 active_color) {
 
-    piece_type  +=  ((active_color == WHITE) ? 0 : NUM_PIECES);
+    piece_type +=  ((active_color == WHITE) ? 0 : NUM_PIECES);
 
-    std::array<std::string, 12> pieces = {
+    std::array<std::string, UNIQUE_PIECES> pieces = {
         "K", "Q", "R", "B", "N", "",  // 0-5: white pieces
         "k", "q", "r", "b", "n", ""   // 6-11: black pieces
     };
     
-    if (piece_type >= 12) {
+    if (piece_type >= UNIQUE_PIECES) {
         return "?"; // Invalid piece type
     }
     

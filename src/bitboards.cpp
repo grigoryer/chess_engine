@@ -20,7 +20,7 @@ void print_board(U64 bitboard)
         for (int file = MAX_FILE; file >= 0; --file) 
         {
             U64 mask = 1ULL << (LAST_BIT - (rank * BOARD_LENGTH + file));
-            char c = (bitboard & mask) ? '1' : '.';
+            char c = (((bitboard & mask) != 0) ? '1' : '.');
             std::cout << c << ' ';
         }
         std::cout << '\n';
@@ -33,7 +33,7 @@ void print_board(U64 bitboard)
 void Board::print_piece_list() 
 {
 
-    constexpr std::array<char, 13> piece_to_char = {
+    constexpr std::array<char, UNIQUE_PIECES + 1> piece_to_char = {
         'K', 'Q', 'R', 'B', 'N', 'P',
         'k', 'q', 'r', 'b', 'n', 'p', '.',
     };
@@ -48,7 +48,7 @@ void Board::print_piece_list()
             int square = (rank * BOARD_LENGTH) + file;
             U8 piece = piece_list[square];
             
-            char piece_char = (piece <= p) ? piece_to_char[piece] : piece_to_char[12];
+            char piece_char = (piece <= p) ? piece_to_char[piece] : piece_to_char[UNIQUE_PIECES];
             std::cout << piece_char << " ";
         }
         std::cout << "\n";
@@ -213,7 +213,7 @@ void Board::init_piece_list()
     for (U8 piece_type = KING; piece_type <= PAWN; ++piece_type)
     {
         U64 bb_white = bb_pieces[WHITE][piece_type];
-        while (bb_white)
+        while (bb_white != 0)
         {
             U8 square = lsb(bb_white);
             piece_list[square] = static_cast<PieceList>(piece_type); // K–P
@@ -221,7 +221,7 @@ void Board::init_piece_list()
         }
 
         U64 bb_black = bb_pieces[BLACK][piece_type];
-        while (bb_black)
+        while (bb_black != 0)
         {
             U8 square = lsb(bb_black);
             piece_list[square] = static_cast<PieceList>(piece_type + NUM_PIECES); // k–p

@@ -9,11 +9,9 @@ void Board::make_move(Move move)
     history.push(game_state);
 
     const U8 side = us();
-    const U8 enemy = opponent();
     const U8 piece = move.get_piece();
     const U8 from = move.get_source();
     const U8 to = move.get_target();
-    const U8 promoted = move.get_promoted();
 
     const bool is_capture = move.is_capture();
     const bool is_promotion = move.is_promotion();
@@ -34,10 +32,10 @@ void Board::make_move(Move move)
     if(piece == ROOK || piece == KING) { castling_permissions_support(side, from, piece); }
 
     if(move.is_quiet()) { move_piece(side, piece, from, to); swap_sides(); return; }
-    if(move.is_double()) { return double_support(side, from, to); }
-    if(move.is_castling()) { return castling_support(side, from, to); }
-    if(move.is_enpassant()) { return ep_support(move, side, from, to); }
-    if(move.is_promotion()) { promotion_support(move, side, from, to); }
+    if(move.is_double()) { double_support(side, from, to); return;}
+    if(move.is_castling()) { castling_support(side, from, to); return; }
+    if(move.is_enpassant()) { ep_support(move, side, from, to); return; }
+    if(move.is_promotion()) { promotion_support(move, side, from, to); return; }
 }
 
 void Board::castling_support(U8 side, U8 king_from, U8 king_to)
@@ -47,7 +45,8 @@ void Board::castling_support(U8 side, U8 king_from, U8 king_to)
     // Determine rook movement based on direction
     const bool is_kingside = (king_to > king_from);
 
-    U8 rook_from, rook_to;
+    U8 rook_from = 0;
+    U8 rook_to = 0;
 
     if (side == WHITE) 
     {
@@ -73,10 +72,10 @@ void Board::castling_permissions_support(U8 side, U8 from, U8 piece)
     {
         U8 new_castling = game_state.castling;
 
-        if(from == h1) new_castling &= ~wk;      // White kingside
-        else if(from == a1) new_castling &= ~wq; // White queenside  
-        else if(from == h8) new_castling &= ~bk; // Black kingside
-        else if(from == a8) new_castling &= ~bq; // Black queenside
+        if(from == h1) { new_castling &= ~wk; }       // White kingside
+        else if(from == a1) { new_castling &= ~wq; } // White queenside  
+        else if(from == h8) { new_castling &= ~bk; } // Black kingside
+        else if(from == a8) { new_castling &= ~bq; }// Black queenside
         
         update_castling_permissions(new_castling);
     }
@@ -101,14 +100,14 @@ void Board::update_halfclock(bool is_capture, bool is_promotion, U8 piece)
 
 void Board::promotion_support(const Move move, U8 side, U8 from, U8 to)
 {
-    U8 promoted_piece;
+    U8 promoted_piece = 0;
 
     switch(move.get_promoted())
     {
         case(n_promotion): promoted_piece =  KNIGHT; break;
         case(b_promotion): promoted_piece = BISHOP; break;
         case(r_promotion): promoted_piece =  ROOK; break;
-        case(q_promotion): promoted_piece = QUEEN; break;
+        case(q_promotion): promoted_piece = QUEEN; break; //NOLINT
         default: promoted_piece = QUEEN; break;
     }
 
@@ -129,7 +128,6 @@ void Board::ep_support(Move move, U8 side, U8 from, U8 to)
 {
     U8 ep = enpassant_to_square(game_state.en_passant);
     const U8 captured_square = ep + (opponent() == WHITE ? n_shift : -s_shift);
-    std::cout << (int)captured_square << std::endl;
 
     game_state.captured_piece = PAWN;
     remove_piece(opponent(), PAWN, captured_square);
@@ -206,7 +204,7 @@ void Board::clear_epsquare()
 
 void Board::unmake_move()
 {
-    if(history.count == 0) return; 
+    if(history.count == 0) { return; } 
     
     GameState prev_state = history.top();
     Move prev_move = prev_state.move;
@@ -215,9 +213,9 @@ void Board::unmake_move()
     const U8 piece = prev_move.get_piece();
     const U8 from = prev_move.get_source();
     const U8 to = prev_move.get_target();
-    const U8 promoted = prev_move.get_promoted();
+    const bool is_promotion = prev_move.is_promotion();
 
-    if(prev_move.is_promotion()) 
+    if(is_promotion) 
     {
         unmake_promotion(prev_move, side_that_moved, from, to, prev_state);
     }
@@ -229,7 +227,7 @@ void Board::unmake_move()
     {
         unmake_castling(prev_move);
     }
-    else if(prev_move.is_capture() && !prev_move.is_promotion())
+    else if(prev_move.is_capture() && !is_promotion)
     {
         move_piece(side_that_moved, piece, to, from);
         unmake_capture(prev_move, prev_state);
@@ -246,13 +244,13 @@ void Board::unmake_move()
 
 void Board::unmake_promotion(const Move& move, U8 side, U8 from, U8 to, const GameState& prev_state)
 {
-    U8 promoted_piece;
+    U8 promoted_piece = 0;
     switch(move.get_promoted())
     {
         case(n_promotion): promoted_piece = KNIGHT; break;
         case(b_promotion): promoted_piece = BISHOP; break;
         case(r_promotion): promoted_piece = ROOK; break;
-        case(q_promotion): promoted_piece = QUEEN; break;
+        case(q_promotion): promoted_piece = QUEEN; break; //NOLINT
         default: promoted_piece = QUEEN; break;
     }
 
@@ -291,7 +289,8 @@ void Board::unmake_castling(const Move& move)
     
     // Determine rook movement to reverse
     const bool is_kingside = (king_to > king_from);
-    U8 rook_from, rook_to;
+    U8 rook_from = 0;
+    U8 rook_to = 0;
     
     if (side == WHITE) 
     {

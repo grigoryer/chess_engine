@@ -6,7 +6,7 @@ void Board::gen_moves(U8 side)
 {
     move_list.clear();
 
-    if(king_sqaure(side) < 0 || king_sqaure(side) > 63) { std::cout << "King Died"; return; }
+    if(king_sqaure(side) < a1 || king_sqaure(side) > h8) { std::cout << "King Died"; return; }
 
     if(side == 0){
         gen_white_moves();
@@ -103,7 +103,7 @@ void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
         if(game_state.en_passant != ep_none)
         {
             U8 ep_square = enpassant_to_square(game_state.en_passant);
-            if(get_bit(attack_tables.pawn_attacks[WHITE][from], ep_square) != 0)
+            if(get_bit(attack_tables.pawn_attacks[WHITE][from], ep_square))
             {
                 //std::cout << "pawn enpassant " << (int)from << " -> " << (int)ep_square << "\n";
                 move_list.add(Move(from, ep_square, PAWN, no_promotion, false, false, true, false));
@@ -173,7 +173,7 @@ void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
         if(game_state.en_passant != ep_none)
         {
             U8 ep_square = enpassant_to_square(game_state.en_passant);
-            if(get_bit(attack_tables.pawn_attacks[BLACK][from], ep_square) != 0)
+            if(get_bit(attack_tables.pawn_attacks[BLACK][from], ep_square))
             {
                 //std::cout << "pawn enpassant " << (int)from << " -> " << (int)ep_square << "\n";
                 move_list.add(Move(from, ep_square, PAWN, no_promotion, false, false, true, false));
@@ -261,48 +261,48 @@ void Board::gen_castling_moves(U8 side, U64 occupancy) {
 
 void Board::try_white_kingside_castle(U64 occupancy)
 {
-    if ((wk & game_state.castling) == 0) return;
-    if (!get_bit(bb_pieces[WHITE][ROOK], h1)) return; 
-    if (get_bit(occupancy, f1) || get_bit(occupancy, g1)) return;
+    if ((wk & game_state.castling) == 0) { return; }
+    if (!get_bit(bb_pieces[WHITE][ROOK], h1)) { return; }
+    if (get_bit(occupancy, f1) || get_bit(occupancy, g1)) { return; }
     if (is_square_attacked(e1, BLACK) || 
         is_square_attacked(f1, BLACK) || 
-        is_square_attacked(g1, BLACK)) return;
+        is_square_attacked(g1, BLACK)) { return; }
 
     move_list.add(Move(e1, g1, KING, no_promotion, false, false, false, true));
 }
 
 void Board::try_white_queenside_castle(U64 occupancy)
 {
-    if ((wq & game_state.castling) == 0) return;
-    if (!get_bit(bb_pieces[WHITE][ROOK], a1)) return; 
-    if (get_bit(occupancy, b1) || get_bit(occupancy, c1) || get_bit(occupancy, d1)) return;
+    if ((wq & game_state.castling) == 0) { return; }
+    if (!get_bit(bb_pieces[WHITE][ROOK], a1)) { return; }  
+    if (get_bit(occupancy, b1) || get_bit(occupancy, c1) || get_bit(occupancy, d1)) { return; }
     if (is_square_attacked(d1, BLACK) || 
         is_square_attacked(c1, BLACK) || 
-        is_square_attacked(e1, BLACK)) return;
+        is_square_attacked(e1, BLACK)) { return; }
 
     move_list.add(Move(e1, c1, KING, no_promotion, false, false, false, true));
 }
 
 void Board::try_black_kingside_castle(U64 occupancy)
 {
-    if ((bk & game_state.castling) == 0) return;
-    if (!get_bit(bb_pieces[BLACK][ROOK], h8)) return; 
-    if (get_bit(occupancy, f8) || get_bit(occupancy, g8)) return;
+    if ((bk & game_state.castling) == 0) { return; }
+    if (!get_bit(bb_pieces[BLACK][ROOK], h8)) { return; }
+    if (get_bit(occupancy, f8) || get_bit(occupancy, g8)) { return; }
     if (is_square_attacked(e8, WHITE) || 
         is_square_attacked(f8, WHITE) || 
-        is_square_attacked(g8, WHITE)) return;
+        is_square_attacked(g8, WHITE)) { return; }
 
     move_list.add(Move(e8, g8, KING, no_promotion, false, false, false, true));
 }
 
 void Board::try_black_queenside_castle(U64 occupancy)
 {
-    if ((bq & game_state.castling) == 0) return;
-    if (!get_bit(bb_pieces[BLACK][ROOK], a8)) return; 
-    if (get_bit(occupancy, b8) || get_bit(occupancy, c8) || get_bit(occupancy, d8)) return;
+    if ((bq & game_state.castling) == 0) { return; }
+    if (!get_bit(bb_pieces[BLACK][ROOK], a8)) { return; }
+    if (get_bit(occupancy, b8) || get_bit(occupancy, c8) || get_bit(occupancy, d8)) { return; }
     if (is_square_attacked(d8, WHITE) || 
         is_square_attacked(c8, WHITE) || 
-        is_square_attacked(e8, WHITE)) return;
+        is_square_attacked(e8, WHITE)) { return; }
 
     move_list.add(Move(e8, c8, KING, no_promotion, false, false, false, true));
 }
@@ -373,7 +373,6 @@ void Board::gen_rook_moves(U8 side, U64 occupancy, U64 enemies)
 void Board::gen_queen_moves(U8 side, U64 occupancy, U64 enemies)
 {
     U64 queens = ((side == WHITE) ? bb_pieces[WHITE][QUEEN] : bb_pieces[BLACK][QUEEN]);
-    std::string color = (side == WHITE) ? "white" : "black";
 
     while(queens != 0)
     {
@@ -407,18 +406,17 @@ bool Board::is_square_attacked(U8 square, U8 side)
 {
     U64 board_occupancy = occupancy();
 
-    if((attack_tables.pawn_attacks[side ^ 1][square] & bb_pieces[side][PAWN]) != 0) return true;
+    if((attack_tables.pawn_attacks[side ^ 1][square] & bb_pieces[side][PAWN]) != 0) { return true; } 
     
-    if((attack_tables.knight_attacks[square] & bb_pieces[side][KNIGHT]) != 0) return true;
+    if((attack_tables.knight_attacks[square] & bb_pieces[side][KNIGHT]) != 0) { return true; } 
     
-    if((attack_tables.king_attacks[square] & bb_pieces[side][KING]) != 0) return true;
+    if((attack_tables.king_attacks[square] & bb_pieces[side][KING]) != 0) { return true; } 
     
-    if((attack_tables.get_bishop_attacks(square, board_occupancy) & bb_pieces[side][BISHOP]) != 0) return true;
+    if((attack_tables.get_bishop_attacks(square, board_occupancy) & bb_pieces[side][BISHOP]) != 0) { return true; } 
     
-    if((attack_tables.get_rook_attacks(square, board_occupancy) & bb_pieces[side][ROOK])!= 0) return true;
+    if((attack_tables.get_rook_attacks(square, board_occupancy) & bb_pieces[side][ROOK])!= 0) { return true; } 
     
-    if((attack_tables.get_queen_attacks(square, board_occupancy) & bb_pieces[side][QUEEN])!= 0) return true;
-    
+    if((attack_tables.get_queen_attacks(square, board_occupancy) & bb_pieces[side][QUEEN])!= 0) { return true; } 
     return false;
 }
 

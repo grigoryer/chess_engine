@@ -14,6 +14,7 @@ const U8 NUM_SIDES = 2;
 const U8 NUM_PIECES = 6;
 const U8 NUM_CASTLING = 16;
 const U8 NUM_EPSQUARES = 17;
+const U8 UNIQUE_PIECES = 12;
 const U16 MAX_MOVES = 2048;
 const U8 BOARD_LENGTH = 8;
 const U8 MAX_RANK = 7;
