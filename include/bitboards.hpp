@@ -92,7 +92,7 @@ class Board
         void reset_board();
         U8 us();
         U8 opponent();
-        U8 king_sqaure(U8 side);
+        U8 king_square(U8 side);
         U64& get_piece(U8 side, U8 piece);
         U64& get_side(U8 side);
         void fen_parser(const std::string& fen);
@@ -111,7 +111,7 @@ class Board
         //generation
         void gen_white_moves();
         void gen_black_moves();
-        void gen_moves(U8 side);
+        void gen_moves();
         void gen_white_pawn_moves(U64 occupancy, U64 enemies);
         void gen_black_pawn_moves(U64 occupancy, U64 enemies);
         void gen_knight_moves(U8 side, U64 enemies);
@@ -127,34 +127,37 @@ class Board
 
         //make move
         void make_move(Move move);
+        void determine_captured_piece(U8 to);
+        void update_move_counters(U8 side, U8 piece, U8 from, bool is_capture, bool is_promotion, bool is_double);
+        void calculate_ep_num(U8 side, U8 to);
+        void move_support(U8 side, U8 piece, U8 from, U8 to, Move move, bool is_capture, bool is_promotion, bool is_double);
         void castling_support(U8 side, U8 king_from, U8 king_to);
         void castling_permissions_support(U8 side, U8 from, U8 piece);
-        void capture_support(U8 to);
         void ep_support(Move move, U8 side, U8 from, U8 to);
-        void double_support(U8 side, U8 from, U8 to);
         void update_halfclock(bool is_capture, bool is_promotion, U8 piece);
-        void promotion_support (Move move, U8 side, U8 from, U8 to);
+        static U8 promotion_support(Move move);
+
 
         //unmake move
         void unmake_move();
-        void unmake_promotion(const Move& move, U8 side, U8 from, U8 to, const GameState& prev_state);
-        void unmake_enpassant(U8 side, U8 from, U8 to, const GameState& prev_state);
-        void unmake_castling(const Move& move);
-        void unmake_capture(const Move& move, const GameState& prev_state);
+        void unmake_support(Move move,U8 side, U8 piece, U8 from, U8 to, const GameState& prev_state);
+        void restore_enpassant(Move move, U8 side, U8 from, U8 to, const GameState& prev_state);
+        void restore_castling(Move move, U8 side);
+        void restore_capture(Move move, const GameState& prev_state, U8 square);
 
         //utilities
         bool is_square_attacked(U8 square, U8 side); 
-        bool is_check(U8 side);
-        void under_check();
+        bool in_check(U8 side);
         static bool is_white_square(U8 square); 
         U8 piece_to_piecelist(U8 piece_list_type);
         U8 piecelist_to_piece(U8 piece);
         static U8 enpassant_to_square(U8 enpassant_num);
 
-        //draws
-        bool is_draw();
-        bool is_fifty_move_rule();
-        bool is_threefold_repetition();
-        bool is_insufficient_material();
         bool has_bishop_pair(U8 side);
+
+
+        U64 perft(int depth);
 };
+
+
+void print_attacks(Board& board);

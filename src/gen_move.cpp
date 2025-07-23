@@ -1,13 +1,11 @@
 #include "bitboards.hpp"
 #include "types.hpp"
-#include <iostream>
 
-void Board::gen_moves(U8 side)
+void Board::gen_moves()
 {
+    U8 side = game_state.active_color;
+
     move_list.clear();
-
-    if(king_sqaure(side) < a1 || king_sqaure(side) > h8) { std::cout << "King Died"; return; }
-
     if(side == 0){
         gen_white_moves();
     }
@@ -29,7 +27,6 @@ void Board::gen_white_moves()
     gen_bishop_moves(side, occupied, enemies);
     gen_rook_moves(side, occupied, enemies);
     gen_queen_moves(side, occupied, enemies);
-
 }
 
 void Board::gen_black_moves()
@@ -44,7 +41,6 @@ void Board::gen_black_moves()
     gen_bishop_moves(side, occupied, enemies);
     gen_rook_moves(side, occupied, enemies);
     gen_queen_moves(side, occupied, enemies);
-
 }
 
 void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
@@ -54,9 +50,10 @@ void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
     {
         U8 from = lsb(pawns);
         U8 to = from + n_shift;
+
         if(to <= h8 && !get_bit(occupancy, to))
         {
-            if(from >= a7) // Promotion
+            if((to / BOARD_LENGTH) == promotion_rank_white) // Promotion
             {
                 //std::cout << "pawn " << (int)from << " -> " << (int)to << "q\n";
                 move_list.add(Move(from, to, PAWN, q_promotion, false, false, false, false));
@@ -71,7 +68,7 @@ void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
             {
                 //std::cout << "pawn " << (int)from << " -> " << (int)to << "\n";
                 move_list.add(Move(from, to, PAWN, no_promotion, false, false, false, false));
-                if(from >= a2 && from <= h2 && !get_bit(occupancy, to + n_shift))
+                if(from <= h2 && from >= a2 &&!get_bit(occupancy, to + n_shift))
                 {
                     //std::cout << "pawn " << (int)from << " -> " << (int)(to + 8) << "\n";
                     move_list.add(Move(from, (to + n_shift), PAWN, no_promotion, false, true, false, false));
@@ -82,7 +79,7 @@ void Board::gen_white_pawn_moves(U64 occupancy, U64 enemies)
         while(attacks != 0)
         {
             to = lsb(attacks);
-            if(from >= a7)
+            if((to / BOARD_LENGTH) == promotion_rank_white)
             {
                 //std::cout << "pawn " << (int)from << " -> " << (int)to << "q\n";
                 move_list.add(Move(from, to, PAWN, q_promotion, true, false, false, false));
@@ -120,18 +117,15 @@ void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
     {
         U8 from = lsb(pawns);
         U8 to = from - s_shift;
+
         // forward moves
         if(to >= a1 && !get_bit(occupancy, to))
         {
-            if(from >= a2 && from <= h2) // promotion
+            if((to / BOARD_LENGTH) == promotion_rank_black) // promotion
             {
-                //std::cout << "pawn " << (int)from << " -> " << (int)to << "q\n";
                 move_list.add(Move(from, to, PAWN, q_promotion, false, false, false, false));
-                //std::cout << "pawn " << (int)from << " -> " << (int)to << "r\n";
                 move_list.add(Move(from, to, PAWN, r_promotion, false, false, false, false));
-                //std::cout << "pawn " << (int)from << " -> " << (int)to << "n\n";
                 move_list.add(Move(from, to, PAWN, b_promotion, false, false, false, false));
-                //std::cout << "pawn " << (int)from << " -> " << (int)to << "b\n";
                 move_list.add(Move(from, to, PAWN, n_promotion, false, false, false, false));
             }
             else
@@ -139,9 +133,9 @@ void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
                 //std::cout << "pawn " << (int)from << " -> " << (int)to << "\n";
                 move_list.add(Move(from, to, PAWN, no_promotion, false, false, false, false));
                 // Double move from 7th rank
-                if(from >= a7 && from <= h7 && !get_bit(occupancy, to - s_shift))
+                if(from <= h7 && from >= a7 && !get_bit(occupancy, to - s_shift))
                 {
-                    //std::cout << "pawn " << (int)from << " -> " << (int)(to - 8) << "\n";
+                   // std::cout << "pawn " << (int)from << " -> " << (int)(to - 8) << "\n";
                     move_list.add(Move(from, (to - s_shift), PAWN, no_promotion, false, true, false, false));
                 }
             }
@@ -151,7 +145,8 @@ void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
         while(attacks != 0)
         {
             to = lsb(attacks);
-            if(from >= a2 && from <= h2) // promotion capture
+
+            if((to / BOARD_LENGTH) == promotion_rank_black) // promotion capture
             {
                 //std::cout << "pawn " << (int)from << " -> " << (int)to << "q\n";
                 move_list.add(Move(from, to, PAWN, q_promotion, true, false, false, false));
@@ -187,7 +182,6 @@ void Board::gen_black_pawn_moves(U64 occupancy, U64 enemies)
 void Board::gen_knight_moves(U8 side, U64 enemies)
 {
     U64 knights = (side == WHITE) ? bb_pieces[WHITE][KNIGHT] : bb_pieces[BLACK][KNIGHT];
-    //std::string color = (side == WHITE) ? "white" : "black";
 
     while(knights != 0)
     {
@@ -201,12 +195,12 @@ void Board::gen_knight_moves(U8 side, U64 enemies)
 
             if(!get_bit(enemies, to))
             {
-                //std::cout << "knight " << from << " -> " << to << std::endl;
+                //std::cout << "knight " << (int)from << " -> " << (int)to << std::endl;
                 move_list.add(Move(from, to, KNIGHT, no_promotion, false, false, false, false));
             }
             else
             {
-                //std::cout << "knight " << from << " -> " << to << " captures " << enemy_captured << std::endl;
+                //std::cout << "knight " << (int)from << " -> " << (int)to << " captures " << std::endl;
                 move_list.add(Move(from, to, KNIGHT, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
@@ -218,7 +212,6 @@ void Board::gen_knight_moves(U8 side, U64 enemies)
 void Board::gen_king_moves(U8 side, U64 occupancy, U64 enemies)
 {
     U64 king = (side == WHITE) ? bb_pieces[WHITE][KING] : bb_pieces[BLACK][KING];
-    //std::string color = (side == WHITE) ? "white" : "black";
 
     U8 from = lsb(king);
 
@@ -230,12 +223,10 @@ void Board::gen_king_moves(U8 side, U64 occupancy, U64 enemies)
 
         if(!get_bit(enemies, to))
         {
-            //std::cout << "king " << from << " -> " << to << std::endl;
             move_list.add(Move(from, to, KING, no_promotion, false, false, false, false));
         }
         else
         {
-            //std::cout << "king " << from << " -> " << to << " captures " << enemy_captured << std::endl;
             move_list.add(Move(from, to, KING, no_promotion, true, false, false, false));
         }
 
@@ -324,12 +315,10 @@ void Board::gen_bishop_moves(U8 side, U64 occupancy, U64 enemies)
 
             if(!get_bit(enemies, to))
             {
-                //std::cout << "bishop " << (int)from << " -> " << (int)to << std::endl;
                 move_list.add(Move(from, to, BISHOP, no_promotion, false, false, false, false));
             }
             else
             {
-                //std::cout << "bishop " << (int)from << " -> " << (int)to << " captures " << std::endl;
                 move_list.add(Move(from, to, BISHOP, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
@@ -341,7 +330,6 @@ void Board::gen_bishop_moves(U8 side, U64 occupancy, U64 enemies)
 void Board::gen_rook_moves(U8 side, U64 occupancy, U64 enemies)
 {
     U64 rooks = (side == WHITE) ? bb_pieces[WHITE][ROOK] : bb_pieces[BLACK][ROOK];
-    //std::string color = (side == WHITE) ? "white" : "black";
 
     while(rooks != 0)
     {
@@ -388,12 +376,10 @@ void Board::gen_queen_moves(U8 side, U64 occupancy, U64 enemies)
 
             if(!get_bit(enemies, to))
             {
-                //std::cout << "queen " << from << (int)to << std::endl;
                 move_list.add(Move(from, to, QUEEN, no_promotion, false, false, false, false));
             }
             else
             {
-                //std::cout << "queen " << from << (int)to <<  std::endl;
                 move_list.add(Move(from, to, QUEEN, no_promotion, true, false, false, false));
             }
             pop_bit(attacks, to);
@@ -420,8 +406,13 @@ bool Board::is_square_attacked(U8 square, U8 side)
     return false;
 }
 
-bool Board::is_check(U8 side)
+bool Board::in_check(U8 side)
 {
-    U8 king_square = king_sqaure(side);
-    return is_square_attacked(king_square,opponent());
+
+    if (bb_pieces[side][KING] == 0) {
+        return true; // No king = always in "check" (illegal position)
+    }
+    
+    U8 square = king_square(side);
+    return is_square_attacked(square,opponent());
 }

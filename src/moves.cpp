@@ -155,12 +155,30 @@ bool Move::is_quiet() const
 
 bool Move::is_special() const 
 {
-    return is_enpassant() || is_castling() || is_promotion();
+    return is_enpassant() || is_castling() || is_promotion() || is_capture();
 }
 
 void Move::print_move(U8 active_color) const 
 {
-    std::cout << "\nMove: " << n_to_piece(get_piece(), active_color);
+    
+
+    if(is_castling())
+    {
+        U8 file = get_target() % BOARD_LENGTH;
+
+        if(file == c_file)
+        {
+            std::cout << "O-O-O\n";
+            return;
+        }
+        else if(file == g_file)
+        {
+            std::cout << "O-O\n";
+            return;
+        }
+    }
+
+    std::cout << n_to_piece(get_piece(), active_color);
 
     if(is_capture()){
         std::cout << "x";
@@ -215,8 +233,7 @@ std::string Move::n_to_piece(U8 piece_type, U8 active_color) {
 }
 
 void MoveList::add(const Move move) {
-    assert(count < 256 && "MoveList overflow");
-    moves.at(count++) = move;
+    moves[count++] = move;
 }
 
 void MoveList::clear()
@@ -229,5 +246,19 @@ bool MoveList::is_move_empty(U16 index) const
     if (index < 0 || index >= count) {
         return true; 
     }
+
     return moves.at(index).get_raw() == 0;
+}
+
+
+int MoveList::get_count()
+{
+    return count;
+}
+
+void MoveList::print_all(U8 side)
+{
+    for(int i = 0; i < count; i++){
+        moves[i].print_move(side);
+    }
 }

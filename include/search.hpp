@@ -1,4 +1,5 @@
 #pragma once
+#include "bitboards.hpp"
 
 
 class Search {

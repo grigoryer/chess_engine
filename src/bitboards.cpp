@@ -1,4 +1,5 @@
 #include "bitboards.hpp"
+#include "fen_strings.hpp"
 #include "types.hpp"
 #include <sstream>
 #include <cstring>  
@@ -54,6 +55,22 @@ void Board::print_piece_list()
         std::cout << "\n";
     }
     std::cout << "\n   a b c d e f g h\n";
+}
+
+
+void print_attacks(Board &board){
+
+    for (int rank = 0; rank <= MAX_RANK; ++rank) 
+    {
+        std::cout << BOARD_LENGTH - rank << "  ";
+        for (int file = MAX_FILE; file >= 0; --file) 
+        {
+            int square = (rank * BOARD_LENGTH) + (MAX_FILE - file); // Compute square index (0–63)
+            std::cout << (board.is_square_attacked(square, board.game_state.active_color) ? "1 " : ". "); // Clearer output
+        }
+        std::cout << '\n';
+    }
+    std::cout << "   a b c d e f g h\n\n";
 }
 
 /*=========================
@@ -166,10 +183,10 @@ void Board::fen_parser(const std::string& fen)
         game_state.en_passant = ep_none; //none value
     }
 
-    if(half_move == "-" || parts.size() < fen_half_move){game_state.half_move_clock = 0;}
-    else {game_state.half_move_clock = std::stoi(half_move);}
+    if(half_move == "-" || parts.size() < fen_half_move + 1){ game_state.half_move_clock = 0;}
+    else { game_state.half_move_clock = std::stoi(half_move); }
 
-    if(move == "-" || parts.size() < fen_full_move){game_state.fullmove_number = 0;}
+    if(move == "-" || parts.size() < fen_full_move + 1 ){game_state.fullmove_number = 0;}
     else{game_state.fullmove_number = std::stoi(move);}
 }
 
@@ -265,7 +282,7 @@ void Board::reset_board()
     history.clear();
 }
 
-U8 Board::king_sqaure(U8 side)
+U8 Board::king_square(U8 side)
 {
     return lsb(bb_pieces[side][KING]);
 }
@@ -351,6 +368,7 @@ void GameState::clear()
     en_passant = ep_none;          
     fullmove_number = 0;
     zobrist_key = 0;
+    captured_piece = NONE;
 }
 
 void GameState::print_game_state() 
@@ -401,4 +419,50 @@ GameState& History::get_ref(size_t index)
 GameState History::top()
 {
     return list[count - 1];
+}
+
+
+
+
+
+
+/*=========================
+    PERFT
+=========================*/
+
+U64 Board::perft(int depth)
+{
+    if (depth == 0 ) {
+        return 1ULL;
+    }
+    
+    MoveList moves;
+    gen_moves();
+
+    moves = move_list;
+    //moves.print_all(game_state.active_color);
+    //std::cout << "\ncount: " << moves.get_count() << "\n"; 
+    U64 nodes = 0;
+
+
+    for (int i = 0; i < moves.get_count(); i++) {
+        make_move(moves.moves[i]);
+
+        if (!in_check(game_state.active_color)) {
+            //std::cout << "MADE MOVE: ";
+            //moves.moves[i].print_move(game_state.active_color);
+            //game_state.print_game_state();
+            //print_piece_list();
+            //std::cin.get(); // Wait for user to press Enterc
+            nodes += perft(depth - 1);
+        }
+        unmake_move();
+          //std::cout << "UNMADE MOVE: ";
+          //moves.moves[i].print_move(game_state.active_color);
+          //game_state.print_game_state();
+          //print_piece_list();
+         //std::cin.get(); // Wait for user to press Enter
+    }
+
+    return nodes;
 }

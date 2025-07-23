@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <string>
 
 using U64 = uint64_t;
 using U32 = uint32_t;
@@ -19,11 +18,19 @@ const U16 MAX_MOVES = 2048;
 const U8 BOARD_LENGTH = 8;
 const U8 MAX_RANK = 7;
 const U8 MAX_FILE = 7;
-const U16 MAX_HISTORY = 256;
+const U16 MAX_HISTORY = 2000;
+
+const U8 promotion_rank_white = 7;
+const U8 promotion_rank_black = 0;
+
+const U8 double_rank_black = 6;
+const U8 double_rank_white = 1;
 
 const U8 ep_rank_black = 6;
 const U8 ep_rank_white = 3;
 
+const U8 g_file = 6;
+const U8 c_file = 2;
 
 // attack shifts
 const U8 nw_shift = 7;
@@ -35,14 +42,8 @@ const U8 s_shift = 8;
 const U8 e_shift = 1;
 const U8 w_shift = 1;
 
-const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string CUSTOM_FEN = "qrqrbnbn/PPPPPPPP/7K/8/8/7k/pppppppp/QRQRBNBN w KQkq - 0 1";
 
-const std::string empty_board =  "8/8/8/8/8/8/8/8 w - - ";
-const std::string start_position =  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
-const std::string tricky_position =  "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
-const std::string killer_position =  "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";
-const std::string cmk_position = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 10 9 ";
+
 
 enum Ep_square : U8
 {

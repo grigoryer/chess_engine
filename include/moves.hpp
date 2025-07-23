@@ -67,7 +67,11 @@ class MoveList
 public:
     int count = 0;
     std::array<Move, MAX_HISTORY> moves = {};
+public:
+
+    int get_count();
     void add(Move move);
     void clear();
     bool is_move_empty(U16 index) const;
+    void print_all(U8 side);
 };

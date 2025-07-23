@@ -3,11 +3,10 @@
 #include <ctime>
 #include "bitboards.hpp" 
 
-
 int main()
 {
     Board board;
 
-    print_board(board.get_piece(WHITE, PAWN));
-    return 0;
+    std::cout << board.perft(6);
+    board.print_piece_list();
 }
