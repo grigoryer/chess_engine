@@ -146,8 +146,6 @@ bool Board::legal(Move move)
         occ ^= (1ULL << captured_pawn_sq); // remove captured pawn  
         occ |= (1ULL << to);             // add moving pawn to destination
 
-        print_board(occ);
-
         const U64 bishop_attackers = bb_pieces[enemy][BISHOP] | bb_pieces[enemy][QUEEN];
         const U64 rook_attackers = bb_pieces[enemy][ROOK] | bb_pieces[enemy][QUEEN];
 

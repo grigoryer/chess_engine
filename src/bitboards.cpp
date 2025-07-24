@@ -194,7 +194,7 @@ void Board::fen_parser(const std::string& fen)
 
 void Board::init()
 {
-    fen_parser(STARTING1_FEN);
+    fen_parser(perft_2);
     init_pieces_per_side_bitboard();
     init_piece_list();
     init_between_table();
