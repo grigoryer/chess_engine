@@ -27,6 +27,8 @@ void Board::make_move(Move move)
     if(is_quiet){ move_piece(side, piece, from, to); }
     else{ move_support(side, piece, from, to, move, is_capture, is_promotion, is_double); }
 
+
+    update_check_info();
     swap_sides();
 }
 
@@ -228,6 +230,7 @@ void Board::unmake_move()
 
     // phase 3 return game state.
     game_state = prev_state;
+    update_check_info();
 }
 
 

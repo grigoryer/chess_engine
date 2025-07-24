@@ -1,5 +1,6 @@
 #include "bitboards.hpp"
 #include "fen_strings.hpp"
+#include "check.cpp"
 #include "types.hpp"
 #include <sstream>
 #include <cstring>  
@@ -193,9 +194,10 @@ void Board::fen_parser(const std::string& fen)
 
 void Board::init()
 {
-    fen_parser(STARTING_FEN);
+    fen_parser(STARTING1_FEN);
     init_pieces_per_side_bitboard();
     init_piece_list();
+    init_between_table();
     game_state.zobrist_key = init_zobrist_key();
 }
 
@@ -256,6 +258,19 @@ void Board::init_pieces_per_side_bitboard()
         bb_side[BLACK] |= bb_pieces[BLACK][piece];
     }
 }
+
+
+void Board::init_between_table()
+{
+    for(int from = 0; from < NUM_SQUARES; from++)
+    {
+        for(int to = 0; to < NUM_SQUARES; to++)
+        {
+            bb_between[from][to] = generate_bb_between(from, to);
+        }
+    }
+}
+
 
 U64 Board::occupancy()
 {
@@ -421,48 +436,65 @@ GameState History::top()
     return list[count - 1];
 }
 
-
-
-
-
-
 /*=========================
     PERFT
 =========================*/
 
+
+
+bool Board::is_square_attacked(U8 square, U8 attacker_side)
+{
+    const U64 occ = occupancy();
+
+    // Cheaper checks first (ordering matters).
+    if (attack_tables.pawn_attacks[attacker_side ^ 1][square] & bb_pieces[attacker_side][PAWN]) return true;
+    if (attack_tables.knight_attacks[square] & bb_pieces[attacker_side][KNIGHT]) return true;
+    if (attack_tables.king_attacks[square] & bb_pieces[attacker_side][KING]) return true;
+
+    const U64 bishop_attackers = bb_pieces[attacker_side][BISHOP] | bb_pieces[attacker_side][QUEEN];
+    if (attack_tables.get_bishop_attacks(square, occ) & bishop_attackers) return true;
+
+    const U64 rook_attackers = bb_pieces[attacker_side][ROOK] | bb_pieces[attacker_side][QUEEN];
+    if (attack_tables.get_rook_attacks(square, occ) & rook_attackers) return true;
+
+    return false;
+}
+
+
+bool Board::in_check(U8 side)
+{    
+    U8 square = king_square(side);
+
+    return is_square_attacked(square,game_state.active_color);
+}
+
+
 U64 Board::perft(int depth)
 {
-    if (depth == 0 ) {
+    if (depth == 0) {
         return 1ULL;
     }
     
     MoveList moves;
     gen_moves();
-
     moves = move_list;
-    //moves.print_all(game_state.active_color);
-    //std::cout << "\ncount: " << moves.get_count() << "\n"; 
+    
+    //print_piece_list();
+    
     U64 nodes = 0;
-
-
+    
     for (int i = 0; i < moves.get_count(); i++) {
-        make_move(moves.moves[i]);
-
-        if (!in_check(game_state.active_color)) {
-            //std::cout << "MADE MOVE: ";
-            //moves.moves[i].print_move(game_state.active_color);
-            //game_state.print_game_state();
-            //print_piece_list();
-            //std::cin.get(); // Wait for user to press Enterc
-            nodes += perft(depth - 1);
+        Move move = moves.moves[i];
+        
+        // Check if the move is legal before making it
+        if (!legal(move)) {
+            continue; // Skip illegal moves
         }
+        
+        make_move(move);
+        nodes += perft(depth - 1);
         unmake_move();
-          //std::cout << "UNMADE MOVE: ";
-          //moves.moves[i].print_move(game_state.active_color);
-          //game_state.print_game_state();
-          //print_piece_list();
-         //std::cin.get(); // Wait for user to press Enter
     }
-
+    
     return nodes;
 }

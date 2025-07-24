@@ -27,9 +27,25 @@ inline U8 lsb(U64 bitboard)
     return __builtin_ctzll(bitboard);
 }
 
-inline U8 bits_in_bitboard(U64 bitboard) {
+inline U8 bits_in_bitboard(U64 bitboard) 
+{
     return __builtin_popcountll(bitboard);  
 } 
+
+inline U8 rank_of(U8 square)
+{
+    return (square / 8);
+}
+
+inline U8 file_of(U8 square)
+{
+    return (square % 8);
+}
+
+inline bool more_than_one(U64 bitboard)
+{
+    return bitboard & (bitboard - 1); 
+}
 
 void print_board(U64 bitboard);
 
@@ -72,6 +88,10 @@ class Board
         std::array<std::array<U64, NUM_PIECES>, NUM_SIDES> bb_pieces = {0ULL};
         std::array<U64, NUM_SIDES> bb_side = {0ULL};
         std::array<U8, NUM_SQUARES> piece_list = {NONE};
+        std::array<std::array<U64, NUM_SQUARES>, NUM_SQUARES> bb_between = {0ULL};
+        std::array<U64, NUM_SIDES> blockers_for_king = { 0ULL };
+        std::array<U64, NUM_SIDES> pinners = { 0ULL };
+        std::array<U64, NUM_PIECES> checksquares = { 0ULL };
 
         GameState game_state;
         History history;
@@ -85,9 +105,9 @@ class Board
 
         void init_piece_list();
         void init_pieces_per_side_bitboard();
+        void init_between_table(); 
         void init();
         U64 init_zobrist_key();
-
         U64 occupancy();
         void reset_board();
         U8 us();
@@ -137,7 +157,6 @@ class Board
         void update_halfclock(bool is_capture, bool is_promotion, U8 piece);
         static U8 promotion_support(Move move);
 
-
         //unmake move
         void unmake_move();
         void unmake_support(Move move,U8 side, U8 piece, U8 from, U8 to, const GameState& prev_state);
@@ -152,11 +171,18 @@ class Board
         U8 piece_to_piecelist(U8 piece_list_type);
         U8 piecelist_to_piece(U8 piece);
         static U8 enpassant_to_square(U8 enpassant_num);
-
         bool has_bishop_pair(U8 side);
-
-
         U64 perft(int depth);
+
+        //legal move filtering
+        bool alligned(U8 s1, U8 s2);
+        U64 generate_bb_between(U8 from, U8 to);
+        U64 between_bb(U8 s1, U8 s2);
+        bool legal(Move move);
+        void update_slider_blockers(U8 side);
+        void update_check_info(); 
+        bool attackers_to_exist(U8 square, U64 occupancy, U8 attacking_side);
+        U64 line_bb(U8 sq1, U8 sq2);
 };
 
 

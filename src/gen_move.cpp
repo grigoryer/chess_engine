@@ -388,31 +388,4 @@ void Board::gen_queen_moves(U8 side, U64 occupancy, U64 enemies)
     }
 }
 
-bool Board::is_square_attacked(U8 square, U8 side)
-{
-    U64 board_occupancy = occupancy();
 
-    if((attack_tables.pawn_attacks[side ^ 1][square] & bb_pieces[side][PAWN]) != 0) { return true; } 
-    
-    if((attack_tables.knight_attacks[square] & bb_pieces[side][KNIGHT]) != 0) { return true; } 
-    
-    if((attack_tables.king_attacks[square] & bb_pieces[side][KING]) != 0) { return true; } 
-    
-    if((attack_tables.get_bishop_attacks(square, board_occupancy) & bb_pieces[side][BISHOP]) != 0) { return true; } 
-    
-    if((attack_tables.get_rook_attacks(square, board_occupancy) & bb_pieces[side][ROOK])!= 0) { return true; } 
-    
-    if((attack_tables.get_queen_attacks(square, board_occupancy) & bb_pieces[side][QUEEN])!= 0) { return true; } 
-    return false;
-}
-
-bool Board::in_check(U8 side)
-{
-
-    if (bb_pieces[side][KING] == 0) {
-        return true; // No king = always in "check" (illegal position)
-    }
-    
-    U8 square = king_square(side);
-    return is_square_attacked(square,opponent());
-}
