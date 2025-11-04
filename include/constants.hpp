@@ -4,13 +4,13 @@
 
 using Bitboard = uint64_t;
 using Key = uint64_t;
-using Move = uint32_t;
 using Square = int8_t;
 using Side = int8_t;
 using Piece = int8_t;
 using Score = int16_t;
 using U64 = uint64_t;
 using U32 = uint32_t;
+using U16 = uint16_t;
 using U8 = uint8_t;
 
 //constant numerations.
@@ -125,6 +125,11 @@ enum Direction : int8_t
     NORTH_WEST = NORTH + WEST
 };
 
+
+enum MoveType
+{
+    EVASIONS, QUIET, CAPTURES, SPECIALS
+};
 
 // Bitboard operations
 
