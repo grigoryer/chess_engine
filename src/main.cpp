@@ -6,12 +6,9 @@
 
 int main()
 {
-    Attacks::initialize();
 
-    for(int i = a1; i < noSquare; i++)
-    {
-        std::cin.get();
-        printBoard(Attacks::pawnAttacks[BLACK][i]);
-    }
+    Attacks::initializeAttacks();
+
+
     return 0;
 }

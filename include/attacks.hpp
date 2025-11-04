@@ -55,9 +55,16 @@ constexpr Bitboard shift(Bitboard b)
 
 namespace Attacks 
 {
+    //inline attack tables, in c++17 compiler merges them into one instead of creating indivdual copies per c++ file
     inline std::array<std::array<Bitboard, NUM_SQUARES>, NUM_COLOR> pawnAttacks;
     inline std::array<Bitboard, NUM_SQUARES> knightAttacks;
     inline std::array<Bitboard, NUM_SQUARES> kingAttacks;
+    inline std::array<std::array<Bitboard, ROOK_BLOCKER>, NUM_SQUARES> rookAttacks;
+    inline std::array<std::array<Bitboard, BISHOP_BLOCKER>, NUM_SQUARES> bishopAttacks;
     
-    void initialize(); 
+    void initializeAttacks(); 
+    Bitboard getBishopAttacks(Square sq, Bitboard occ);
+    Bitboard getRookAttacks(Square sq, Bitboard occ);
+    Bitboard getQueenAttacks(Square sq, Bitboard occ);
+
 }
