@@ -4,12 +4,10 @@
 
 class State
 {
-
-
-
+public:
+    EpSquare epSq = EP_NONE;
+    Castling castlingRights = ALL_CASTLING;
 };
-
-
 
 class Board
 {
@@ -22,14 +20,12 @@ public:
     std::array<Piece, NUM_SQUARES> pieceList;
     Bitboard occupancy;
     
+    State curState;
     Side curSide;
     void fenParser(const std::string& fen);
     void init();
 
-
-
 public:
-
 
     Board();
     Board(const std::string& fen);

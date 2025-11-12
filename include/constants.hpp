@@ -56,7 +56,6 @@ enum PieceType : Piece
     KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NONE
 };
 
-
 //Piece mailbox list
 enum UniquePiece : Piece
 {
@@ -131,7 +130,7 @@ enum Direction : int8_t
 
 enum MoveType
 {
-    QUIET, CAPTURE, ALL
+    QUIET, CAPTURE, LEGAL
 };
 
 template<Direction D>
@@ -150,6 +149,18 @@ constexpr Bitboard shift(Bitboard b)
     if constexpr (D == SOUTH_WEST) return (b & ~FileABB) >> 9;
 }
 
+enum Castling : U8
+{ 
+    NO_CASTLING = 0, WK = 1, WQ = 2, BK = 4, BQ = 8, WHITE_CASTLING = 3, BLACK_CASTLING = 12, ALL_CASTLING = 15 
+};
+
+inline Castling operator|(Castling a, Castling b) {
+    return Castling(static_cast<U8>(a) | static_cast<U8>(b));
+}
+inline Castling& operator|=(Castling& a, Castling b) {
+    a = a | b;
+    return a;
+}
 
 // Bitboard operations
 constexpr bool getBit(const Bitboard &bb, Square sq) 
@@ -194,7 +205,6 @@ constexpr Bitboard squareBb(Square sq)
     return (1ULL << sq);
 }
 
-
 //Square conversions
 constexpr U8 squareRank(U8 sq)
 {
@@ -209,9 +219,9 @@ constexpr U8 squareFile(U8 sq)
 constexpr U8 epsquareToSquare(U8 epSq)
 {
     if(epSq == EP_NONE) { return noSquare; }
-
-    if(epSq >= EP_BLACK_A) { return a6 + epSq; }
-    else { return epSq; }
+    if(epSq >= EP_BLACK_A) { return a6 + (epSq - EP_BLACK_A); }
+    
+    return noSquare;
 }
 
 
