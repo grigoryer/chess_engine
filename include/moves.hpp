@@ -1,6 +1,5 @@
 #pragma once
 #include <constants.hpp>
-#include <cstdint>
 
 
 //Move class encoding moves into a single number
@@ -30,24 +29,43 @@ class Move
 
 public:
 
-    Move(Square from, Square to, Piece piece);
-    Move(Square from, Square to, Piece piece, bool capture);
-    Move(Square from, Square to, Piece piece, bool capture, Piece promotion);
-    Move(Square from, Square to, Piece piece, bool capture, Piece promotion, bool doublePush, bool enpassant, bool castle);
+    inline Square getFrom() const      { return data & FROM_MASK; }
+    inline Square getTo() const        { return (data & TO_MASK) >> TO_SHIFT; }
+    inline Piece getPiece() const      { return (data & PIECE_MASK) >> PIECE_SHIFT; }
+    inline Piece getPromoted() const   { return (data & PROMOTED_MASK) >> PROMOTED_SHIFT; }
 
-    inline Square getFrom()       { return data & FROM_MASK; }
-    inline Square getTo()         { return (data & TO_MASK) >> TO_SHIFT; }
-    inline Piece getPiece()       { return (data & PIECE_MASK) >> PIECE_SHIFT; }
-    inline Piece getPromoted()    { return (data & PROMOTED_MASK) >> PROMOTED_SHIFT; }
+    inline bool isCapture() const      { return data & CAPTURE_MASK; }
+    inline bool isDouble() const       { return data & DOUBLE_MASK; }
+    inline bool isEnpassant() const    { return data & ENPASSANT_MASK; }
+    inline bool isCastle() const       { return data & CASTLING_MASK; }
+    inline bool isPromoted() const     { return getPromoted() != NONE; }
 
-    inline bool isCapture()       { return data & CAPTURE_MASK; }
-    inline bool isDouble()        { return data & DOUBLE_MASK; }
-    inline bool isEnpassant()     { return data & ENPASSANT_MASK; }
-    inline bool isCastle()        { return data & CASTLING_MASK; }
-    inline bool isPromoted()      { return getPromoted() != NONE; }
+    inline void setData(U32 move) { data = move; }
 };
 
 class ExtdMove : public Move
 {
-    U32 score;
+    U32 score = 0;
+    
+
+public: 
+    
+
+    inline void setMove(Square from, Square to, Piece piece,bool capture = false, Piece promotion = NONE,  bool doublePush = false, bool enpassant = false, bool castle = false)
+    {
+        setData((from | (to << TO_SHIFT) | (piece << PIECE_SHIFT) |
+                (promotion << PROMOTED_SHIFT) | (capture << CAPTURE_SHIFT) |
+                (doublePush << DOUBLE_SHIFT) | (enpassant << ENPASSANT_SHIFT) |
+                (castle << CASTLE_SHIFT)));
+    }
+};
+
+
+class MoveList
+{
+public:
+
+    std::array<ExtdMove, 256> list;
+
+
 };

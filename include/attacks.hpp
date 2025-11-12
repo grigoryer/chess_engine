@@ -37,21 +37,6 @@ constexpr Bitboard shiftKnight(Bitboard bb)
     if constexpr (D == SW_SHORT)    return (bb & ~(FileABB | FileBBB)) >> 10;
 }
 
-template<Direction D>
-constexpr Bitboard shift(Bitboard b) 
-{
-    if constexpr (D == NORTH)      return b << 8;
-    if constexpr (D == SOUTH)      return b >> 8;
-
-    if constexpr (D == WEST)       return (b & ~FileABB) >> 1;
-    if constexpr (D == EAST)       return (b & ~FileHBB) << 1;
-
-    if constexpr (D == NORTH_EAST) return (b & ~FileHBB) << 9;
-    if constexpr (D == NORTH_WEST) return (b & ~FileABB) << 7;
-
-    if constexpr (D == SOUTH_EAST) return (b & ~FileHBB) >> 7;
-    if constexpr (D == SOUTH_WEST) return (b & ~FileABB) >> 9;
-}
 
 namespace Attacks 
 {
@@ -67,4 +52,29 @@ namespace Attacks
     Bitboard getRookAttacks(Square sq, Bitboard occ);
     Bitboard getQueenAttacks(Square sq, Bitboard occ);
 
+
+    template<PieceType P>
+    Bitboard getPieceAttacks(Square sq, Bitboard occ)
+    {
+        if constexpr (P == BISHOP)
+        {
+            return getBishopAttacks(sq, occ);
+        }
+        else if constexpr (P == ROOK)
+        {
+            return getRookAttacks(sq, occ);
+        }
+        else if constexpr (P == QUEEN)
+        {
+            return getQueenAttacks(sq, occ);
+        }
+        else if constexpr (P == KING)
+        {
+            return kingAttacks[sq];
+        }
+        else if constexpr (P == KNIGHT)
+        {
+            return knightAttacks[sq];
+        }
+    }
 }
