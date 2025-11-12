@@ -1,2 +1,164 @@
+#include "constants.hpp"
 #include <position.hpp>
+#include <sstream>
 
+
+
+
+void Board::fenParser(const std::string& fen)
+{
+    //reset all board to empty;
+    for (auto& bb : pieceBB) bb = 0ULL;
+    for (auto& bb : colorBB) bb = 0ULL;
+    occupancy = 0ULL;
+
+    constexpr int fen_position = 0;
+    constexpr int fen_color = 1;
+    constexpr int fen_castling = 2;
+    constexpr int fen_en_passant = 3;
+    constexpr int fen_half_move = 4;
+    constexpr int fen_full_move = 5;
+
+
+    std::array<std::string, 6> parts;
+    std::istringstream iss(fen);
+    std::string word;
+
+    int i = 0;
+
+    while (iss >> word ) {
+        parts[i++] = word;
+    }
+
+    //split up string into parts
+    int rank = 0; 
+    int file = 0;
+
+    std::string position = parts[fen_position];
+    std::string color = parts[fen_color];
+    std::string castling = parts[fen_castling];
+    std::string en_passant = parts[fen_en_passant];
+    std::string half_move = parts[fen_half_move];
+    std::string move = parts[fen_full_move];
+
+    // handle the first position part of the fen string and add bits where specified.
+    for(int i = 0; i < position.length(); i++)
+    {
+        char ch = position[i];
+
+        if(ch == '/')
+        {
+            rank++;
+            file = 0;
+        }
+        else if (std::isdigit(ch) != 0) 
+        {
+            file += (ch - '0');
+        }
+        else
+        {
+            Side isWhite = isupper(ch) ? WHITE : BLACK;
+            int sq = ((RANK_8 - rank) * NUM_RANKS) + file;
+
+            isWhite == WHITE ?  setBit(colorBB[WHITE],sq) : setBit(colorBB[BLACK],sq);
+
+            ch = (char)tolower(ch);
+
+            switch(ch)
+            {
+                case 'k': setBit(pieceBB[KING], sq); break;
+                case 'q': setBit(pieceBB[QUEEN], sq); break;
+                case 'r': setBit(pieceBB[ROOK], sq); break;
+                case 'b': setBit(pieceBB[BISHOP], sq); break;
+                case 'n': setBit(pieceBB[KNIGHT], sq); break;
+                case 'p': setBit(pieceBB[PAWN], sq); break;
+            }
+
+            file++;   
+        }
+    }
+
+    curSide = (color == "w" ) ?  WHITE : BLACK;
+
+    /*state->castling_rights = NO_CASTLING;
+    
+    for(int i = 0; i < castling.length(); i++)
+    {
+        char ch = castling[i];
+        switch(ch) 
+        {
+            case 'K': state->castling_rights |= WK; break;
+            case 'Q': state->castling_rights |= WQ; break;
+            case 'k': state->castling_rights |= BK; break;
+            case 'q': state->castling_rights |= BQ; break;
+            case '-': break;
+        }
+    }
+
+    //parse en passant if any.
+    if(en_passant != "-")
+    {
+        int file = en_passant[0] - 'a';
+        int rank = en_passant[1] - '0';
+
+        if(rank == RANK_4) 
+        {
+            state->ep_num = static_cast<U8>(file); // 0-7
+        }
+        else if(rank == RANK_7) 
+        {
+            state->ep_num = static_cast<U8>(NUM_FILES + file); 
+        }
+    }
+    else
+    {
+        state->ep_num = ep_none; //none value
+    }
+
+    if(half_move == "-" || parts[fen_half_move] == ""){ state->half_move = 0; }
+    else { state->half_move = std::stoi(half_move); }
+
+    if(move == "-" || parts[fen_full_move] == "" ){ state->full_move = 0; }
+    else{ state->full_move = std::stoi(move); }*/
+}
+
+void Board::init()
+{
+    //set occupancy for all pieces
+    occupancy = colorBB[WHITE] | colorBB[BLACK];
+
+    //fill peice board
+    pieceList.fill(noPiece);
+    for (Piece piece = KING; piece <= PAWN; piece++)
+    {
+        Bitboard whitePieceBB = getUniquePiece(WHITE, piece);
+        while (whitePieceBB != 0)
+        {
+            Square sq = popLsb(whitePieceBB);
+            pieceList[sq] = piece; // K–P
+        }
+
+        Bitboard blackPieceBB = getUniquePiece(BLACK, piece);
+        while (blackPieceBB != 0)
+        {
+            Square sq = popLsb(blackPieceBB);
+            pieceList[sq] = (piece + NUM_PIECES); // k-p
+        }
+    }
+
+
+}
+
+
+Board::Board()
+{
+    fenParser(STARTING_FEN);
+    init();
+}
+
+
+Board::Board(const std::string& fen)
+{
+    fenParser(fen);
+    init();
+}
