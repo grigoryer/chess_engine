@@ -50,7 +50,6 @@ class ExtdMove : public Move
 
 public: 
     
-
     inline void setMove(Square from, Square to, Piece piece,bool capture = false, Piece promotion = NONE,  bool doublePush = false, bool enpassant = false, bool castle = false)
     {
         setData((from | (to << TO_SHIFT) | (piece << PIECE_SHIFT) |

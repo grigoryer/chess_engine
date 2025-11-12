@@ -1,3 +1,4 @@
+#include <cassert>
 #include <constants.hpp>
 #include <moves.hpp>
 #include <position.hpp>
@@ -22,9 +23,10 @@ ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard 
             Bitboard attacks = Attacks::pawnAttacks[side][sq] & target;
             while (attacks) 
             {
+                Square to = popLsb(attacks);
                 for(Piece promo = QUEEN; promo <= KNIGHT; promo++)
                 {
-                    list->setMove(sq, popLsb(attacks),PAWN, true, promo);
+                    list->setMove(sq, to,PAWN, true, promo);
                     list++;
                 }
             }
@@ -57,7 +59,6 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
     Bitboard promotionRank = (side == WHITE ? Rank7BB : Rank2BB);
     Bitboard promoPawns = pawns & promotionRank;
     pawns &= ~promoPawns;
-
 
     if(promoPawns != 0)
     {
@@ -98,6 +99,17 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
     }
     else if constexpr (Mt == CAPTURE)
     { 
+        if(b.curState.epSq != EP_NONE)
+        {
+            Square epLocation = epsquareToSquare(b.curState.epSq);
+            Bitboard epAttackers = Attacks::pawnAttacks[side ^ 1][epLocation] & pawns;
+            while(epAttackers) 
+            {
+                list->setMove(popLsb(epAttackers), epLocation, PAWN, true, NONE, false, true);
+                list++;
+            }
+        }
+
         while(pawns)
         {
             Square sq = popLsb(pawns);
@@ -108,9 +120,6 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
                 list++;
             }
         }
-
-
-        //ENPASSANT LOGIC HERE
     }
 
     return list;
@@ -119,7 +128,6 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
 template<PieceType P, MoveType Mt>
 ExtdMove* genPieceMoves(ExtdMove* list, Board& b, Side side, Bitboard target)
 {
-    
     Bitboard curPieces = b.getUniquePiece(side, P);
     while(curPieces)
     {
@@ -134,13 +142,47 @@ ExtdMove* genPieceMoves(ExtdMove* list, Board& b, Side side, Bitboard target)
     return list;
 }
 
+inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, Side side)
+{
+    if(side == WHITE)
+    {
+        if((WK & castleRights) == WK && !getBit(occ, f1) && !getBit(occ, g1))
+        { 
+            list->setMove(e1, g1, KING, false, NONE, false, false, true); 
+            list++;
+        }
+        if ((WQ & castleRights) == WQ && !getBit(occ, b1) && !getBit(occ, c1) && !getBit(occ, d1))
+        { 
+            list->setMove(e1, c1, KING, false, NONE, false, false, true); 
+            list++;
+        }
+    }
+    else
+    {
+        if((BK & castleRights) == BK && !getBit(occ, f8) && !getBit(occ, g8))
+        { 
+            list->setMove(e8, g8, KING, false, NONE, false, false, true); 
+            list++;
+        }
+        if ((BQ & castleRights) == BQ && !getBit(occ, b8) && !getBit(occ, c8) && !getBit(occ, d8))
+        {
+            list->setMove(e8, c8, KING, false, NONE, false, false, true); 
+            list++;
+        }
+    }
 
+    return list;
+}
+
+//psuedo legal moves, deosnt check for pin detection. This will be passed into a lgeal checker and it will also score and remove the bad moves. 
 
 template<MoveType Mt>
 ExtdMove* generateMoves(ExtdMove* list, Board& b)
 { 
 
     Bitboard target = 0;
+    Side side = b.curSide;
+
     if constexpr (Mt == CAPTURE)
     {
         target = b.getSide(b.curSide ^ 1);
@@ -148,16 +190,14 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b)
     else if constexpr (Mt == QUIET)
     {
         target = ~b.occupancy;
+        list = genCastle(list, b.curState.castlingRights, b.occupancy, side);
     }
 
-
-    list = genPieceMoves<KNIGHT, Mt>(list, b,b.curSide, target);
-    list = genPieceMoves<BISHOP, Mt>(list, b,b.curSide, target);
-    list = genPieceMoves<ROOK, Mt>(list, b,b.curSide, target);
-    list = genPieceMoves<QUEEN, Mt>(list, b,b.curSide, target);
-    list = genPieceMoves<KING, Mt>(list, b,b.curSide, target);
-    list = genPawns<Mt>(list, b, b.curSide, target);
+    list = genPieceMoves<KNIGHT, Mt>(list, b, side, target);
+    list = genPieceMoves<BISHOP, Mt>(list, b,side, target);
+    list = genPieceMoves<ROOK, Mt>(list, b,side, target);
+    list = genPieceMoves<QUEEN, Mt>(list, b,side, target);
+    list = genPieceMoves<KING, Mt>(list, b,side, target);
+    list = genPawns<Mt>(list, b, side, target);
     return list;
 }
-
-

@@ -80,17 +80,17 @@ void Board::fenParser(const std::string& fen)
 
     curSide = (color == "w" ) ?  WHITE : BLACK;
 
-    /*state->castling_rights = NO_CASTLING;
+    curState.castlingRights = NO_CASTLING;
     
     for(int i = 0; i < castling.length(); i++)
     {
         char ch = castling[i];
         switch(ch) 
         {
-            case 'K': state->castling_rights |= WK; break;
-            case 'Q': state->castling_rights |= WQ; break;
-            case 'k': state->castling_rights |= BK; break;
-            case 'q': state->castling_rights |= BQ; break;
+            case 'K': curState.castlingRights |= WK; break;
+            case 'Q': curState.castlingRights |= WQ; break;
+            case 'k': curState.castlingRights |= BK; break;
+            case 'q': curState.castlingRights |= BQ; break;
             case '-': break;
         }
     }
@@ -103,19 +103,19 @@ void Board::fenParser(const std::string& fen)
 
         if(rank == RANK_4) 
         {
-            state->ep_num = static_cast<U8>(file); // 0-7
+            curState.epSq = static_cast<EpSquare>(file); // 0-7
         }
         else if(rank == RANK_7) 
         {
-            state->ep_num = static_cast<U8>(NUM_FILES + file); 
+            curState.epSq = static_cast<EpSquare>(NUM_FILES + file); 
         }
     }
     else
     {
-        state->ep_num = ep_none; //none value
+        curState.epSq = EP_NONE; //none value
     }
 
-    if(half_move == "-" || parts[fen_half_move] == ""){ state->half_move = 0; }
+    /*if(half_move == "-" || parts[fen_half_move] == ""){ state->half_move = 0; }
     else { state->half_move = std::stoi(half_move); }
 
     if(move == "-" || parts[fen_full_move] == "" ){ state->full_move = 0; }
