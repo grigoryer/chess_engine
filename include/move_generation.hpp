@@ -3,15 +3,13 @@
 #include <constants.hpp>
 #include <moves.hpp>
 #include <position.hpp>
-#include <moves.hpp>
 #include <debug.hpp>
 #include <attacks.hpp>
+#include <between.hpp>
 
 
-static int count = 0;
 Bitboard generateBlockers(Board& b, Side s);
 bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers);
-
 
 template<MoveType Mt>
 ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard target)
@@ -53,6 +51,77 @@ ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard 
     return list;
 }
 
+template<Side S>
+ExtdMove* genPawnsQuiet(ExtdMove* list, Board& b, Bitboard target)
+{
+    Bitboard pawns = b.getUniquePiece(S, PAWN);
+    Direction fromDirection;
+    Bitboard doublePawns;
+
+    if (S == WHITE)
+    {
+        pawns = shift<NORTH>(pawns);
+        doublePawns = shift<NORTH>(pawns & Rank3BB);
+        fromDirection = SOUTH;
+        pawns &= target;
+        doublePawns &= target;
+    }
+    else
+    {
+        pawns = shift<SOUTH>(pawns) & target;
+        fromDirection = NORTH;
+        doublePawns = shift<SOUTH>(pawns & Rank6BB) & target;
+        pawns &= target;
+        doublePawns &= target;
+    }
+
+    while(doublePawns)
+    {
+        Square sq = popLsb(doublePawns);
+        list->setMove(sq + fromDirection + fromDirection, sq, PAWN, false, NONE, true);
+        list++;
+    }
+
+    while(pawns)
+    {
+        Square sq = popLsb(pawns);
+        list->setMove(sq + fromDirection, sq, PAWN);
+        list++;
+    }
+    return list;
+}
+
+// Helper function to generate capturing pawn moves
+template<Side S>
+ExtdMove* genPawnsCapture(ExtdMove* list, Board& b, Bitboard target)
+{
+    Bitboard pawns = b.getUniquePiece(S, PAWN);
+    
+    if(b.curState.epSq != EP_NONE)
+    {
+        Square epLocation = epsquareToSquare(b.curState.epSq);
+        Bitboard epAttackers = Attacks::pawnAttacks[S ^ 1][epLocation] & pawns;
+        while(epAttackers) 
+        {
+            list->setMove(popLsb(epAttackers), epLocation, PAWN, true, NONE, false, true);
+            list++;
+        }
+    }
+
+    while(pawns)
+    {
+        Square sq = popLsb(pawns);
+        Bitboard attacks = Attacks::pawnAttacks[S][sq] & target;
+        while(attacks) 
+        {
+            list->setMove(sq, popLsb(attacks), PAWN, true);
+            list++;
+        }
+    }
+    return list;
+}
+
+// Main pawn generation function
 template<MoveType Mt>
 ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
 {
@@ -68,58 +137,28 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
 
     if constexpr (Mt == QUIET)
     {
-        Direction fromDirection;
-        Bitboard doublePawns;
-
-        if (side == WHITE)
-        {
-            pawns = shift<NORTH>(pawns) & target;
-            fromDirection = SOUTH;
-            doublePawns = shift<NORTH>(pawns & Rank3BB) & target;
-        }
-        else
-        {
-            pawns = shift<SOUTH>(pawns) & target;
-            fromDirection = NORTH;
-            doublePawns = shift<SOUTH>(pawns & Rank6BB) & target;
-        }
-
-        while(doublePawns)
-        {
-            Square sq = popLsb(doublePawns);
-            list->setMove(sq + fromDirection + fromDirection, sq, PAWN, false, NONE, true);
-            list++;
-        }
-
-        while(pawns)
-        {
-            Square sq = popLsb(pawns);
-            list->setMove(sq + fromDirection, sq, PAWN);
-            list++;
+        if (side == WHITE) {
+            list = genPawnsQuiet<WHITE>(list, b, target);
+        } else {
+            list = genPawnsQuiet<BLACK>(list, b, target);
         }
     }
     else if constexpr (Mt == CAPTURE)
-    { 
-        if(b.curState.epSq != EP_NONE)
-        {
-            Square epLocation = epsquareToSquare(b.curState.epSq);
-            Bitboard epAttackers = Attacks::pawnAttacks[side ^ 1][epLocation] & pawns;
-            while(epAttackers) 
-            {
-                list->setMove(popLsb(epAttackers), epLocation, PAWN, true, NONE, false, true);
-                list++;
-            }
+    {
+        if (side == WHITE) {
+            list = genPawnsCapture<WHITE>(list, b, target);
+        } else {
+            list = genPawnsCapture<BLACK>(list, b, target);
         }
-
-        while(pawns)
-        {
-            Square sq = popLsb(pawns);
-            Bitboard attacks = Attacks::pawnAttacks[side][sq] & target;
-            while(attacks) 
-            {
-                list->setMove(sq, popLsb(attacks), PAWN, true);
-                list++;
-            }
+    }
+    else if constexpr (Mt == EVASIONS)
+    {
+        if (side == WHITE) {
+            list = genPawnsQuiet<WHITE>(list, b, target & ~b.occupancy);
+            list = genPawnsCapture<WHITE>(list, b, target & b.getSide(side ^ 1));
+        } else {
+            list = genPawnsQuiet<BLACK>(list, b, target & ~b.occupancy);
+            list = genPawnsCapture<BLACK>(list, b, target & b.getSide(side ^ 1));
         }
     }
 
@@ -136,7 +175,11 @@ ExtdMove* genPieceMoves(ExtdMove* list, Board& b, Side side, Bitboard target)
         Bitboard movesBB = Attacks::getPieceAttacks<P>(from, b.occupancy, side) & target;
         while(movesBB)
         {
-            list->setMove(from, popLsb(movesBB), P, Mt == CAPTURE);
+            Square to = popLsb(movesBB);
+            bool capture = false;
+            if(Mt == CAPTURE || getBit(b.getSide(side ^ 1), to)) { capture = true; } // works quick since we short cirucit if statement
+
+            list->setMove(from, to, P, capture);
             list++;
         }
     }
@@ -181,24 +224,37 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b, Side s)
 { 
 
     Bitboard target = 0;
-    Side side = s;
 
-    if constexpr (Mt == CAPTURE)
+    if constexpr (Mt == EVASIONS)
     {
-        target = b.getSide(side ^ 1);
+        Bitboard kingTarget = FullBB & ~b.getSide(s);
+        if(bitCount(b.curState.checkingSqs[s]) > 1)
+        {
+            return (list = genPieceMoves<KING, Mt>(list, b,s, kingTarget));
+        }
+        else 
+        {
+            target = Between::betweenBB(lsb(b.curState.checkingSqs[s]), lsb(b.getUniquePiece(s, KING))) | b.curState.checkingSqs[s];
+            list = genPieceMoves<KING, Mt>(list, b,s, kingTarget);
+        }
+    }
+    else if constexpr (Mt == CAPTURE )
+    {
+        target = b.getSide(s ^ 1);
+        list = genPieceMoves<KING, Mt>(list, b,s, target);
     }
     else if constexpr (Mt == QUIET)
     {
         target = ~b.occupancy;
-        list = genCastle(list, b.curState.castlingRights, b.occupancy, side);
+        list = genPieceMoves<KING, Mt>(list, b,s, target);
+        list = genCastle(list, b.curState.castlingRights, b.occupancy, s);
     }
 
-    list = genPieceMoves<KNIGHT, Mt>(list, b, side, target);
-    list = genPieceMoves<BISHOP, Mt>(list, b,side, target);
-    list = genPieceMoves<ROOK, Mt>(list, b,side, target);
-    list = genPieceMoves<QUEEN, Mt>(list, b,side, target);
-    list = genPieceMoves<KING, Mt>(list, b,side, target);
-    list = genPawns<Mt>(list, b, side, target);
+    list = genPieceMoves<KNIGHT, Mt>(list, b, s, target);
+    list = genPieceMoves<BISHOP, Mt>(list, b,s, target);
+    list = genPieceMoves<ROOK, Mt>(list, b,s, target);
+    list = genPieceMoves<QUEEN, Mt>(list, b,s, target);
+    list = genPawns<Mt>(list, b, s, target);
     return list;
 }
 

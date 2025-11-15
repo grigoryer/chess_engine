@@ -140,7 +140,7 @@ enum Direction : int8_t
 
 enum MoveType
 {
-    QUIET, CAPTURE, LEGAL
+    QUIET, CAPTURE, LEGAL, EVASIONS
 };
 
 template<Direction D>

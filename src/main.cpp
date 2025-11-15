@@ -14,43 +14,12 @@ int main()
 {
     Attacks::initializeAttacks();
     Between::initializeBetween();
-
     MoveList list;
-    
-    Board board(killer_position);
-    
-    Bitboard blockers = generateBlockers(board, board.curSide);
+    Board board(perft_2);
+    Bitboard blockers = generateBlockers(board, board.curSide);    
 
-    auto end = list.list.begin();
-    end = generateLegals(end, board, board.curSide);
-
-    int legalCount = 0;
-    for (auto m = list.list.begin(); m != end; ++m)
-    {
-        std::cout << squareArray[(int)m->getFrom()]
-                << "->" << squareArray[(int)m->getTo()]
-                << " Piece: " << (int) m->getPiece()
-                << " EP: " << (int) m->isEnpassant()
-                << " Is LEGAL: " << (isLegal(m, board, board.curSide, blockers) ? "YES" : "NO")
-                << "\n";
-
-                if(isLegal(m, board, board.curSide, blockers)) legalCount++;
-    }
-
-    std::cout << "COUNT OF MOVES: " << legalCount;
-    printPieceBoard(board);
-
-    
-    return 0;
-}
-
-
-
-
-/*
-    int count = 1000;
-    std::chrono::nanoseconds totalTime;
-
+    int count = 100000;
+    std::chrono::nanoseconds totalTime(0);
     for(int i = 0; i < count; i++)
     {
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -62,6 +31,17 @@ int main()
         std::cout << "\nTime:  " << std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
         std::cout << "\n";
     }
+
+    std::cout << "\nAVG TIME TAKEN: " << (totalTime.count()/count);
+
+    
+    return 0;
+}
+
+
+
+
+
 
 
 
