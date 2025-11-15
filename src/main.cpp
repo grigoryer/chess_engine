@@ -1,6 +1,5 @@
 #include <attacks.hpp>
 #include <debug.hpp>
-#include <chrono>
 #include <moves.hpp>
 #include <iostream>
 #include <constants.hpp>
@@ -18,14 +17,14 @@ int main()
 
     MoveList list;
     
-    Board board(perft_3);
+    Board board(killer_position);
     
     Bitboard blockers = generateBlockers(board, board.curSide);
 
     auto end = list.list.begin();
     end = generateLegals(end, board, board.curSide);
 
-
+    int legalCount = 0;
     for (auto m = list.list.begin(); m != end; ++m)
     {
         std::cout << squareArray[(int)m->getFrom()]
@@ -34,10 +33,11 @@ int main()
                 << " EP: " << (int) m->isEnpassant()
                 << " Is LEGAL: " << (isLegal(m, board, board.curSide, blockers) ? "YES" : "NO")
                 << "\n";
+
+                if(isLegal(m, board, board.curSide, blockers)) legalCount++;
     }
 
-
-    std::cout << "COUNT OF MOVES: " << end - list.list.begin();
+    std::cout << "COUNT OF MOVES: " << legalCount;
     printPieceBoard(board);
 
     
