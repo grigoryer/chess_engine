@@ -1,0 +1,15 @@
+generating attacks 
+    create target + 1;
+
+
+
+pin
+
+
+
+    assume we are in check
+    how do we know we are in check
+        - Check squares bitboard array
+        - run through each bitboard and see if its empty or not
+        - if not empty we in check.
+
