@@ -1,7 +1,6 @@
 #include "constants.hpp"
 #include <debug.hpp>
 #include "moves.hpp"
-#include <between.hpp>
 #include <iostream>
 #include <move_generation.hpp>
 #include <attacks.hpp>
@@ -105,6 +104,13 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
 
 ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s)
 {
+    auto check = b.isCheck(s);
+
+    if(check)
+    {
+        return list = generateMoves<EVASIONS>(list, b, s);
+    }
+
     list = generateMoves<QUIET>(list, b, s);
     list = generateMoves<CAPTURE>(list, b, s);
     return list;

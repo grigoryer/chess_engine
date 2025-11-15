@@ -146,6 +146,9 @@ void Board::init()
             pieceList[sq] = (piece + NUM_PIECES); // k-p
         }
     }
+
+    setCheckSqs(WHITE);
+    setCheckSqs(BLACK);
 }
 
 Board::Board()
