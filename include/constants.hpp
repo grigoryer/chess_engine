@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -16,7 +17,7 @@ using U8 = uint8_t;
 
 //constant numerations.
 constexpr int NUM_SQUARES = 64;
-constexpr int NUM_COLOR = 2;
+constexpr int NUM_SIDES = 2;
 constexpr int NUM_RANKS = 8;
 constexpr int NUM_FILES = 8;
 constexpr int NUM_PIECES = 6;
@@ -80,6 +81,17 @@ enum Squares : Square
     a8,b8,c8,d8,e8,f8,g8,h8, noSquare
 };
 
+inline std::array<std::string, NUM_SQUARES> squareArray{
+    "a1","b1","c1","d1","e1","f1","g1","h1",
+    "a2","b2","c2","d2","e2","f2","g2","h2",
+    "a3","b3","c3","d3","e3","f3","g3","h3",
+    "a4","b4","c4","d4","e4","f4","g4","h4",
+    "a5","b5","c5","d5","e5","f5","g5","h5",
+    "a6","b6","c6","d6","e6","f6","g6","h6",
+    "a7","b7","c7","d7","e7","f7","g7","h7",
+    "a8","b8","c8","d8","e8","f8","g8","h8",
+};
+
 enum File : U8
 {
     FILE_A,
@@ -113,7 +125,6 @@ enum EpSquare : Square
     EP_NONE
 };
 
-
 enum Direction : int8_t
 {
     NORTH = 8,
@@ -126,7 +137,6 @@ enum Direction : int8_t
     SOUTH_WEST = SOUTH + WEST,
     NORTH_WEST = NORTH + WEST
 };
-
 
 enum MoveType
 {
@@ -219,35 +229,21 @@ constexpr U8 squareFile(U8 sq)
 constexpr U8 epsquareToSquare(U8 epSq)
 {
     if(epSq == EP_NONE) { return noSquare; }
+    if(epSq < EP_BLACK_A) { return a3 + epSq; }
     if(epSq >= EP_BLACK_A) { return a6 + (epSq - EP_BLACK_A); }
     
     return noSquare;
 }
 
 
-//debug functions
-inline void printBoard(Bitboard bitboard)
+constexpr U8 epsquareToCaptureSquare(U8 epSq)
 {
-    using std::cout;
-
-    cout << "\n";
-    for (int rank = 7; rank >= 0; --rank)
-    {
-        cout << rank + 1 << " "; 
-        for (int file = 0; file < NUM_FILES; ++file)
-        {
-            Square square = rank * 8 + file;
-            char c = getBit(bitboard, square) ? '1' : '.';
-            cout << c << ' ';
-        }
-        cout << '\n';
-    }
-    cout << "  a b c d e f g h\n\n";
-    cout << "#: " << bitboard << '\n';
+    if(epSq == EP_NONE) { return noSquare; }
+    if(epSq < EP_BLACK_A) { return a4 + epSq; }
+    if(epSq >= EP_BLACK_A) { return a5 + (epSq - EP_BLACK_A); }
+    
+    return noSquare;
 }
-
-
-
 
 
 const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

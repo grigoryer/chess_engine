@@ -1,25 +1,81 @@
 #include <attacks.hpp>
+#include <debug.hpp>
+#include <chrono>
 #include <moves.hpp>
 #include <iostream>
 #include <constants.hpp>
+#include <ostream>
 #include <position.hpp>
+#include <between.hpp>
 #include <move_generation.hpp>
 
 
 
 int main()
 {
-
     Attacks::initializeAttacks();
+    Between::initializeBetween();
+
     MoveList list;
-    Board board("rnbqkbnr/ppPp1pPp/8/4pP2/8/2NQ1BN1/P1PB2PP/R3K2R w KQkq e6 0 1");
+    
+    Board board(perft_3);
+    
+    Bitboard blockers = generateBlockers(board, board.curSide);
+
+    auto end = list.list.begin();
+    end = generateLegals(end, board, board.curSide);
+
+
+    for (auto m = list.list.begin(); m != end; ++m)
+    {
+        std::cout << squareArray[(int)m->getFrom()]
+                << "->" << squareArray[(int)m->getTo()]
+                << " Piece: " << (int) m->getPiece()
+                << " EP: " << (int) m->isEnpassant()
+                << " Is LEGAL: " << (isLegal(m, board, board.curSide, blockers) ? "YES" : "NO")
+                << "\n";
+    }
+
+
+    std::cout << "COUNT OF MOVES: " << end - list.list.begin();
+    printPieceBoard(board);
 
     
-    std::cout << "\n\nCURRENT EP: " << (int)board.curState.epSq;
-    auto end = generateMoves<QUIET>(list.list.begin(), board);
+    return 0;
+}
 
-    end = generateMoves<CAPTURE>(end, board);
-    
+
+
+
+/*
+    int count = 1000;
+    std::chrono::nanoseconds totalTime;
+
+    for(int i = 0; i < count; i++)
+    {
+        auto startTime = std::chrono::high_resolution_clock::now();
+        auto end = list.list.begin();
+        end = generateLegals(end, board, board.curSide);
+        auto endTime = std::chrono::high_resolution_clock::now();
+        totalTime += std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
+        std::cout << "\nCOUNT: " << i;
+        std::cout << "\nTime:  " << std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
+        std::cout << "\n";
+    }
+
+
+
+    /*
+    auto end = list.list.begin();
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    end = generateLegals(end, board, board.curSide);
+
+    board.setCheckSqs(WHITE);
+    auto check = board.isCheck(WHITE);
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+
     for (auto m = list.list.begin(); m != end; ++m)
     {
         std::cout << "From: " << (int)m->getFrom() 
@@ -32,5 +88,7 @@ int main()
     }
 
     std::cout << "COUNT OF MOVES: " << end - list.list.begin();
-    return 0;
-}
+
+    auto avgTime = totalTime/count;
+    std::cout << "\nAVG time taken: " << avgTime.count();
+*/

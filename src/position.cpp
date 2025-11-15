@@ -1,7 +1,8 @@
+#include "attacks.hpp"
 #include "constants.hpp"
 #include <position.hpp>
+#include <debug.hpp>
 #include <sstream>
-
 
 
 
@@ -9,7 +10,7 @@ void Board::fenParser(const std::string& fen)
 {
     //reset all board to empty;
     for (auto& bb : pieceBB) bb = 0ULL;
-    for (auto& bb : colorBB) bb = 0ULL;
+    for (auto& bb : sideBB) bb = 0ULL;
     occupancy = 0ULL;
 
     constexpr int fen_position = 0;
@@ -60,7 +61,7 @@ void Board::fenParser(const std::string& fen)
             Side isWhite = isupper(ch) ? WHITE : BLACK;
             int sq = ((RANK_8 - rank) * NUM_RANKS) + file;
 
-            isWhite == WHITE ?  setBit(colorBB[WHITE],sq) : setBit(colorBB[BLACK],sq);
+            isWhite == WHITE ?  setBit(sideBB[WHITE],sq) : setBit(sideBB[BLACK],sq);
 
             ch = (char)tolower(ch);
 
@@ -125,7 +126,7 @@ void Board::fenParser(const std::string& fen)
 void Board::init()
 {
     //set occupancy for all pieces
-    occupancy = colorBB[WHITE] | colorBB[BLACK];
+    occupancy = sideBB[WHITE] | sideBB[BLACK];
 
     //fill peice board
     pieceList.fill(noPiece);
@@ -145,10 +146,7 @@ void Board::init()
             pieceList[sq] = (piece + NUM_PIECES); // k-p
         }
     }
-
-
 }
-
 
 Board::Board()
 {
@@ -156,9 +154,31 @@ Board::Board()
     init();
 }
 
-
 Board::Board(const std::string& fen)
 {
     fenParser(fen);
     init();
+}
+
+void Board::setCheckSqs(Side s)
+{
+    Square sq = lsb(getUniquePiece(s, KING));
+
+    curState.checkSqs[s][PAWN]   =   Attacks::getPieceAttacks<PAWN>(sq, occupancy, s);
+    curState.checkSqs[s][KNIGHT] =   Attacks::getPieceAttacks<KNIGHT>(sq, occupancy, s);
+    curState.checkSqs[s][BISHOP] =   Attacks::getPieceAttacks<BISHOP>(sq, occupancy, s);
+    curState.checkSqs[s][ROOK]   =   Attacks::getPieceAttacks<ROOK>(sq, occupancy, s);
+    curState.checkSqs[s][QUEEN]  =   curState.checkSqs[s][ROOK] | curState.checkSqs[s][BISHOP];    
+}
+
+bool Board::isCheck(Side s)
+{
+    curState.checkingSqs[s] = 0ULL;
+    Side enemy = s ^ 1;
+
+    for(Piece p = QUEEN; p <= PAWN; p++)
+    {
+        curState.checkingSqs[s] |= curState.checkSqs[s][p] & getUniquePiece(enemy, p);
+    }
+    return curState.checkingSqs[s] != 0ULL;
 }

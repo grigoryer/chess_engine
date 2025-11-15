@@ -1,17 +1,18 @@
+#pragma once
 #include <cassert>
 #include <constants.hpp>
 #include <moves.hpp>
 #include <position.hpp>
 #include <moves.hpp>
+#include <debug.hpp>
 #include <attacks.hpp>
 
 
+static int count = 0;
+Bitboard generateBlockers(Board& b, Side s);
+bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers);
 
 
-
-
-
-static int count = 0;; 
 template<MoveType Mt>
 ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard target)
 {
@@ -132,7 +133,7 @@ ExtdMove* genPieceMoves(ExtdMove* list, Board& b, Side side, Bitboard target)
     while(curPieces)
     {
         Square from = popLsb(curPieces);
-        Bitboard movesBB = Attacks::getPieceAttacks<P>(from, b.occupancy) & target;
+        Bitboard movesBB = Attacks::getPieceAttacks<P>(from, b.occupancy, side) & target;
         while(movesBB)
         {
             list->setMove(from, popLsb(movesBB), P, Mt == CAPTURE);
@@ -175,17 +176,16 @@ inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, 
 }
 
 //psuedo legal moves, deosnt check for pin detection. This will be passed into a lgeal checker and it will also score and remove the bad moves. 
-
 template<MoveType Mt>
-ExtdMove* generateMoves(ExtdMove* list, Board& b)
+ExtdMove* generateMoves(ExtdMove* list, Board& b, Side s)
 { 
 
     Bitboard target = 0;
-    Side side = b.curSide;
+    Side side = s;
 
     if constexpr (Mt == CAPTURE)
     {
-        target = b.getSide(b.curSide ^ 1);
+        target = b.getSide(side ^ 1);
     }
     else if constexpr (Mt == QUIET)
     {
@@ -201,3 +201,7 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b)
     list = genPawns<Mt>(list, b, side, target);
     return list;
 }
+
+
+
+ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s);

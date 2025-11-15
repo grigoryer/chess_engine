@@ -372,7 +372,7 @@ namespace Attacks
             kingAttacks[sq] = genKingAttacks(sq);
             knightAttacks[sq] = genKnightAttacks(sq);
 
-            for(int side = 0; side < NUM_COLOR; side++)
+            for(int side = 0; side < NUM_SIDES; side++)
             {
                 pawnAttacks[side][sq] = genPawnAttacks(side, sq);
             }

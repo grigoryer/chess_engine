@@ -41,7 +41,7 @@ constexpr Bitboard shiftKnight(Bitboard bb)
 namespace Attacks 
 {
     //inline attack tables, in c++17 compiler merges them into one instead of creating indivdual copies per c++ file
-    inline std::array<std::array<Bitboard, NUM_SQUARES>, NUM_COLOR> pawnAttacks;
+    inline std::array<std::array<Bitboard, NUM_SQUARES>, NUM_SIDES> pawnAttacks;
     inline std::array<Bitboard, NUM_SQUARES> knightAttacks;
     inline std::array<Bitboard, NUM_SQUARES> kingAttacks;
     inline std::array<std::array<Bitboard, ROOK_BLOCKER>, NUM_SQUARES> rookAttacks;
@@ -54,7 +54,7 @@ namespace Attacks
 
 
     template<PieceType P>
-    Bitboard getPieceAttacks(Square sq, Bitboard occ)
+    Bitboard getPieceAttacks(Square sq, Bitboard occ, Side s)
     {
         if constexpr (P == BISHOP)
         {
@@ -75,6 +75,10 @@ namespace Attacks
         else if constexpr (P == KNIGHT)
         {
             return knightAttacks[sq];
+        }
+        else if constexpr (P == PAWN)
+        {
+            return pawnAttacks[s][sq];
         }
     }
 }
