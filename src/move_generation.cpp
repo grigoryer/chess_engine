@@ -2,6 +2,7 @@
 #include <debug.hpp>
 #include "moves.hpp"
 #include <between.hpp>
+#include <iostream>
 #include <move_generation.hpp>
 #include <attacks.hpp>
 
@@ -9,13 +10,13 @@
 
 bool isSquareAttacked(Board& b, Square sq, Side s)
 {
-    for(Piece p = KING; p <= PAWN; p++)
-    {
-        if(b.getUniquePiece(s ^ 1, p) & Attacks::getPieceAttacks<PAWN>(sq, b.occupancy, s))
-        {
-            return true;
-        }
-    }
+    if (b.getUniquePiece(s ^ 1, KING) & Attacks::getPieceAttacks<KING>(sq, b.occupancy, s))     { return true; }
+    if (b.getUniquePiece(s ^ 1, QUEEN) & Attacks::getPieceAttacks<QUEEN>(sq, b.occupancy, s))   { return true; }
+    if (b.getUniquePiece(s ^ 1, ROOK) & Attacks::getPieceAttacks<ROOK>(sq, b.occupancy, s))     { return true; }
+    if (b.getUniquePiece(s ^ 1, BISHOP) & Attacks::getPieceAttacks<BISHOP>(sq, b.occupancy, s)) { return true; }
+    if (b.getUniquePiece(s ^ 1, KNIGHT) & Attacks::getPieceAttacks<KNIGHT>(sq, b.occupancy, s)) { return true; }
+    if (b.getUniquePiece(s ^ 1, PAWN) & Attacks::getPieceAttacks<PAWN>(sq, b.occupancy, s))     { return true; }
+
     return false;
 }
 
@@ -49,7 +50,6 @@ Bitboard generateBlockers(Board& b, Side s)
     return blockers;
 }
 
-
 bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
 {
     Square ksq = lsb(b.getUniquePiece(s, KING));
@@ -82,7 +82,10 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
         while(cur != to)
         {
             cur += shift; 
-            if(isSquareAttacked(b,cur, s)) { return false; }
+            if(isSquareAttacked(b,cur, s)) 
+            { 
+                return false; 
+            }
         }
         return true;
     }
@@ -99,8 +102,6 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
 
     return true;
 };
-
-
 
 ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s)
 {
