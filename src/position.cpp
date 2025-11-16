@@ -1,5 +1,7 @@
 #include "attacks.hpp"
 #include "constants.hpp"
+#include <between.hpp>
+#include "hash.hpp"
 #include <position.hpp>
 #include <debug.hpp>
 #include <sstream>
@@ -59,7 +61,7 @@ void Board::fenParser(const std::string& fen)
         else
         {
             Side isWhite = isupper(ch) ? WHITE : BLACK;
-            int sq = ((RANK_8 - rank) * NUM_RANKS) + file;
+            Square sq = ((RANK_8 - rank) * NUM_RANKS) + file;
 
             isWhite == WHITE ?  setBit(sideBB[WHITE],sq) : setBit(sideBB[BLACK],sq);
 
@@ -81,17 +83,17 @@ void Board::fenParser(const std::string& fen)
 
     curSide = (color == "w" ) ?  WHITE : BLACK;
 
-    curState.castlingRights = NO_CASTLING;
+    curState.castlingRights = Castling::NONE;
     
     for(int i = 0; i < castling.length(); i++)
     {
         char ch = castling[i];
         switch(ch) 
         {
-            case 'K': curState.castlingRights |= WK; break;
-            case 'Q': curState.castlingRights |= WQ; break;
-            case 'k': curState.castlingRights |= BK; break;
-            case 'q': curState.castlingRights |= BQ; break;
+            case 'K': curState.castlingRights |= Castling::WK; break;
+            case 'Q': curState.castlingRights |= Castling::WQ; break;
+            case 'k': curState.castlingRights |= Castling::BK; break;
+            case 'q': curState.castlingRights |= Castling::BQ; break;
             case '-': break;
         }
     }
@@ -113,7 +115,7 @@ void Board::fenParser(const std::string& fen)
     }
     else
     {
-        curState.epSq = EP_NONE; //none value
+        curState.epSq = EpSquare::NONE; //none value
     }
 
     /*if(half_move == "-" || parts[fen_half_move] == ""){ state->half_move = 0; }
@@ -123,32 +125,42 @@ void Board::fenParser(const std::string& fen)
     else{ state->full_move = std::stoi(move); }*/
 }
 
+void initNameSpaces()
+{
+    Attacks::initializeAttacks();
+    Between::initializeBetween();
+    ZobristHashing::initializeZobristRandoms();
+}
+
 void Board::init()
 {
+
+    initNameSpaces();
     //set occupancy for all pieces
     occupancy = sideBB[WHITE] | sideBB[BLACK];
 
     //fill peice board
-    pieceList.fill(noPiece);
+    pieceList.fill(UniquePiece::NONE);
     for (Piece piece = KING; piece <= PAWN; piece++)
     {
         Bitboard whitePieceBB = getUniquePiece(WHITE, piece);
         while (whitePieceBB != 0)
         {
             Square sq = popLsb(whitePieceBB);
-            pieceList[sq] = piece; // K–P
+            pieceList[sq] = static_cast<UniquePiece>(piece); // K–P
         }
 
         Bitboard blackPieceBB = getUniquePiece(BLACK, piece);
         while (blackPieceBB != 0)
         {
             Square sq = popLsb(blackPieceBB);
-            pieceList[sq] = (piece + NUM_PIECES); // k-p
+            pieceList[sq] = static_cast<UniquePiece>(piece + NUM_PIECES); // k-p
         }
     }
 
     setCheckSqs(WHITE);
     setCheckSqs(BLACK);
+    curState.hash = ZobristHashing::initailizeHash(*this);
 }
 
 Board::Board()
