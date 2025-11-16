@@ -1,36 +1,46 @@
 #pragma once
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <string>
 
-using Bitboard = uint64_t;
-using Key = uint64_t;
-using Square = int8_t;
-using Side = int8_t;
-using Piece = int8_t;
-using Score = int16_t;
-using U64 = uint64_t;
-using U32 = uint32_t;
+// ============================================================================
+// TYPE ALIASES
+// ============================================================================
+
+using U8  = uint8_t;
 using U16 = uint16_t;
-using U8 = uint8_t;
+using U32 = uint32_t;
+using U64 = uint64_t;
 
-//constant numerations.
-constexpr int NUM_SQUARES = 64;
-constexpr int NUM_SIDES = 2;
-constexpr int NUM_RANKS = 8;
-constexpr int NUM_FILES = 8;
-constexpr int NUM_PIECES = 6;
-constexpr int NUM_CASTLING = 16;
-constexpr int NUM_EPSQUARES = 17;
+using Bitboard = U64;
+using Key      = U64;
+using Square   = int8_t;
+using Side     = int8_t;
+using Piece    = int8_t;
+using Score    = int16_t;
 
-//array sizing
-constexpr int MAX_MOVES = 128;
-constexpr int MAX_HISTORY = 512;
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-// file and ranks
-// rank 1-8 files A-H
+constexpr int NUM_SQUARES    = 64;
+constexpr int NUM_SIDES      = 2;
+constexpr int NUM_RANKS      = 8;
+constexpr int NUM_FILES      = 8;
+constexpr int NUM_PIECES     = 6;
+constexpr int NUM_CASTLING   = 16;
+constexpr int NUM_EPSQUARES  = 17;
+
+constexpr int MAX_MOVES      = 128;
+constexpr int MAX_HISTORY    = 512;
+
+// ============================================================================
+// BITBOARD CONSTANTS
+// ============================================================================
+
 constexpr Bitboard FullBB = 0xFFFFFFFFFFFFFFFFULL;
+
+// Files
 constexpr Bitboard FileABB = 0x0101010101010101ULL;
 constexpr Bitboard FileBBB = FileABB << 1;
 constexpr Bitboard FileCBB = FileABB << 2;
@@ -39,6 +49,8 @@ constexpr Bitboard FileEBB = FileABB << 4;
 constexpr Bitboard FileFBB = FileABB << 5;
 constexpr Bitboard FileGBB = FileABB << 6;
 constexpr Bitboard FileHBB = FileABB << 7;
+
+// Ranks
 constexpr Bitboard Rank1BB = 0xFF;
 constexpr Bitboard Rank2BB = Rank1BB << (8 * 1);
 constexpr Bitboard Rank3BB = Rank1BB << (8 * 2);
@@ -48,20 +60,13 @@ constexpr Bitboard Rank6BB = Rank1BB << (8 * 5);
 constexpr Bitboard Rank7BB = Rank1BB << (8 * 6);
 constexpr Bitboard Rank8BB = Rank1BB << (8 * 7);
 
-// Enumerations
+// ============================================================================
+// ENUMERATIONS
+// ============================================================================
 
-
-//Piece type
-enum PieceType : Piece
+enum PieceType : Piece 
 {
     KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NONE
-};
-
-//Piece mailbox list
-enum UniquePiece : Piece
-{
-    K = 0, Q = 1, R = 2, B = 3, N = 4, P = 5, //white pieces
-    k = 6, q = 7, r = 8, b = 9, n = 10, p = 11, noPiece = 12
 };
 
 enum Sides : Side
@@ -69,28 +74,13 @@ enum Sides : Side
     WHITE, BLACK
 };
 
-enum Squares : Square
+enum class UniquePiece : Piece 
 {
-    a1,b1,c1,d1,e1,f1,g1,h1,
-    a2,b2,c2,d2,e2,f2,g2,h2,
-    a3,b3,c3,d3,e3,f3,g3,h3,
-    a4,b4,c4,d4,e4,f4,g4,h4,
-    a5,b5,c5,d5,e5,f5,g5,h5,
-    a6,b6,c6,d6,e6,f6,g6,h6,
-    a7,b7,c7,d7,e7,f7,g7,h7,
-    a8,b8,c8,d8,e8,f8,g8,h8, noSquare
+    WK = 0, WQ = 1, WR = 2, WB = 3, WN = 4, WP = 5,
+    BK = 6, BQ = 7, BR = 8, BB = 9, BN = 10, BP = 11,
+    NONE = 12
 };
 
-inline std::array<std::string, NUM_SQUARES> squareArray{
-    "a1","b1","c1","d1","e1","f1","g1","h1",
-    "a2","b2","c2","d2","e2","f2","g2","h2",
-    "a3","b3","c3","d3","e3","f3","g3","h3",
-    "a4","b4","c4","d4","e4","f4","g4","h4",
-    "a5","b5","c5","d5","e5","f5","g5","h5",
-    "a6","b6","c6","d6","e6","f6","g6","h6",
-    "a7","b7","c7","d7","e7","f7","g7","h7",
-    "a8","b8","c8","d8","e8","f8","g8","h8",
-};
 
 enum File : U8
 {
@@ -116,15 +106,6 @@ enum Rank : U8
     RANK_8,
 };
 
-enum EpSquare : Square
-{
-    EP_WHITE_A, EP_WHITE_B, EP_WHITE_C, EP_WHITE_D,
-    EP_WHITE_E, EP_WHITE_F, EP_WHITE_G, EP_WHITE_H,
-    EP_BLACK_A, EP_BLACK_B, EP_BLACK_C, EP_BLACK_D,
-    EP_BLACK_E, EP_BLACK_F, EP_BLACK_G, EP_BLACK_H,
-    EP_NONE
-};
-
 enum Direction : int8_t
 {
     NORTH = 8,
@@ -138,112 +119,191 @@ enum Direction : int8_t
     NORTH_WEST = NORTH + WEST
 };
 
-enum MoveType
+enum MoveType 
 {
     QUIET, CAPTURE, LEGAL, EVASIONS
 };
 
-template<Direction D>
-constexpr Bitboard shift(Bitboard b) 
+enum class Castling : U8 
 {
-    if constexpr (D == NORTH)      return b << 8;
-    if constexpr (D == SOUTH)      return b >> 8;
-
-    if constexpr (D == WEST)       return (b & ~FileABB) >> 1;
-    if constexpr (D == EAST)       return (b & ~FileHBB) << 1;
-
-    if constexpr (D == NORTH_EAST) return (b & ~FileHBB) << 9;
-    if constexpr (D == NORTH_WEST) return (b & ~FileABB) << 7;
-
-    if constexpr (D == SOUTH_EAST) return (b & ~FileHBB) >> 7;
-    if constexpr (D == SOUTH_WEST) return (b & ~FileABB) >> 9;
-}
-
-enum Castling : U8
-{ 
-    NO_CASTLING = 0, WK = 1, WQ = 2, BK = 4, BQ = 8, WHITE_CASTLING = 3, BLACK_CASTLING = 12, ALL_CASTLING = 15 
+    NONE  = 0,
+    WK    = 1,
+    WQ    = 2,
+    BK    = 4,
+    BQ    = 8,
+    WHITE = 3,
+    BLACK = 12,
+    ALL = 15
 };
 
-inline Castling operator|(Castling a, Castling b) {
+// Bitwise operations for Castling
+inline Castling operator | (Castling a, Castling b) 
+{
     return Castling(static_cast<U8>(a) | static_cast<U8>(b));
 }
-inline Castling& operator|=(Castling& a, Castling b) {
+
+inline Castling& operator |= (Castling& a, Castling b) {
     a = a | b;
     return a;
 }
 
-// Bitboard operations
-constexpr bool getBit(const Bitboard &bb, Square sq) 
+inline Castling operator&(Castling a, Castling b) {
+    return Castling(static_cast<U8>(a) & static_cast<U8>(b));
+}
+
+inline Castling operator~(Castling a) {
+    return Castling(~static_cast<U8>(a));
+}
+
+// ============================================================================
+// SQUARE ENUMERATION AND LOOKUP
+// ============================================================================
+
+enum Squares : Square 
+{
+    a1,b1,c1,d1,e1,f1,g1,h1,
+    a2,b2,c2,d2,e2,f2,g2,h2,
+    a3,b3,c3,d3,e3,f3,g3,h3,
+    a4,b4,c4,d4,e4,f4,g4,h4,
+    a5,b5,c5,d5,e5,f5,g5,h5,
+    a6,b6,c6,d6,e6,f6,g6,h6,
+    a7,b7,c7,d7,e7,f7,g7,h7,
+    a8,b8,c8,d8,e8,f8,g8,h8,
+    noSquare
+};
+
+inline constexpr std::array<std::string_view, NUM_SQUARES> SQUARE_NAMES
+{
+    "a1","b1","c1","d1","e1","f1","g1","h1",
+    "a2","b2","c2","d2","e2","f2","g2","h2",
+    "a3","b3","c3","d3","e3","f3","g3","h3",
+    "a4","b4","c4","d4","e4","f4","g4","h4",
+    "a5","b5","c5","d5","e5","f5","g5","h5",
+    "a6","b6","c6","d6","e6","f6","g6","h6",
+    "a7","b7","c7","d7","e7","f7","g7","h7",
+    "a8","b8","c8","d8","e8","f8","g8","h8",
+};
+
+enum class EpSquare : Square {
+    WA, WB, WC, WD, WE, WF, WG, WH,
+    BA, BB, BC, BD, BE, BF, BG, BH,
+    NONE
+};
+
+// ============================================================================
+// BITBOARD OPERATIONS
+// ============================================================================
+
+inline bool getBit(Bitboard bb, Square sq) 
 {
     return (bb & (1ULL << sq)) != 0;
 }
 
-constexpr void setBit(Bitboard &bb, Square sq) 
+inline void setBit(Bitboard& bb, Square sq) 
 {
     bb |= (1ULL << sq);
 }
 
-constexpr Square lsb(Bitboard bb) 
+inline Square lsb(Bitboard bb) 
 {
-    return __builtin_ctzll(bb);
+    return static_cast<Square>(__builtin_ctzll(bb));
 }
 
-constexpr void popBit(Bitboard &bb, Square sq)
+inline void popBit(Bitboard& bb, Square sq) 
 {
     bb &= ~(1ULL << sq);
 }
 
-constexpr Square popLsb(Bitboard &bb) 
+inline Square popLsb(Bitboard& bb) 
 {
     Square sq = lsb(bb);
     bb &= ~(1ULL << sq);
     return sq;
 }
 
-constexpr int bitCount(Bitboard bb) 
+inline int bitCount(Bitboard bb) 
 {
-    return __builtin_popcountll(bb);  
-} 
-
-constexpr bool moreThanOneBit(Bitboard bb) 
-{
-    return __builtin_popcountll(bb) > 1;
-} 
-
-constexpr Bitboard squareBb(Square sq)
-{
-    return (1ULL << sq);
+    return __builtin_popcountll(bb);
 }
 
-//Square conversions
-constexpr U8 squareRank(U8 sq)
+inline bool moreThanOneBit(Bitboard bb) 
+{
+    return __builtin_popcountll(bb) > 1;
+}
+
+inline Bitboard squareBb(Square sq) 
+{
+    return 1ULL << sq;
+}
+
+// ============================================================================
+// SQUARE CONVERSIONS
+// ============================================================================
+
+inline U8 squareRank(Square sq) 
 {
     return sq / 8;
 }
 
-constexpr U8 squareFile(U8 sq)
+inline U8 squareFile(Square sq) 
 {
     return sq % 8;
 }
 
-constexpr U8 epsquareToSquare(U8 epSq)
+inline Square epsquareToSquare(EpSquare epSq) 
 {
-    if(epSq == EP_NONE) { return noSquare; }
-    if(epSq < EP_BLACK_A) { return a3 + epSq; }
-    if(epSq >= EP_BLACK_A) { return a6 + (epSq - EP_BLACK_A); }
-    
-    return noSquare;
+    if (epSq == EpSquare::NONE) return static_cast<Square>(Squares::noSquare);
+    if (static_cast<int>(epSq) < 8) {
+        return static_cast<Square>(Squares::a3) + static_cast<int>(epSq);
+    }
+    return static_cast<Square>(Squares::a6) + (static_cast<int>(epSq) - 8);
+}
+
+inline Square epsquareToCaptureSquare(EpSquare epSq) 
+{
+    if (epSq == EpSquare::NONE) return static_cast<Square>(Squares::noSquare);
+    if (static_cast<int>(epSq) < 8) {
+        return static_cast<Square>(Squares::a4) + static_cast<int>(epSq);
+    }
+    return static_cast<Square>(Squares::a5) + (static_cast<int>(epSq) - 8);
+}
+
+inline EpSquare squareToEpsquare(Square sq, Side s) 
+{
+    return static_cast<EpSquare>(squareFile(sq) + (s == BLACK ? 8 : 0));
+}
+
+inline UniquePiece pieceToUniquePiece(Piece piece, Side s)
+{
+    return static_cast<UniquePiece>(piece + (s == WHITE ? 0 : NUM_PIECES));
+}
+
+inline Piece getPieceType(UniquePiece uniquePiece)
+{
+    return static_cast<Piece>(static_cast<int>(uniquePiece) % NUM_PIECES);
+}
+
+// ============================================================================
+// BITBOARD SHIFT OPERATIONS
+// ============================================================================
+
+template<Direction D>
+inline constexpr Bitboard shift(Bitboard b) 
+{
+    if constexpr (D == Direction::NORTH)      return b << 8;
+    if constexpr (D == Direction::SOUTH)      return b >> 8;
+    if constexpr (D == Direction::WEST)       return (b & ~FileABB) >> 1;
+    if constexpr (D == Direction::EAST)       return (b & ~FileHBB) << 1;
+    if constexpr (D == Direction::NORTH_EAST) return (b & ~FileHBB) << 9;
+    if constexpr (D == Direction::NORTH_WEST) return (b & ~FileABB) << 7;
+    if constexpr (D == Direction::SOUTH_EAST) return (b & ~FileHBB) >> 7;
+    if constexpr (D == Direction::SOUTH_WEST) return (b & ~FileABB) >> 9;
 }
 
 
-constexpr U8 epsquareToCaptureSquare(U8 epSq)
-{
-    if(epSq == EP_NONE) { return noSquare; }
-    if(epSq < EP_BLACK_A) { return a4 + epSq; }
-    if(epSq >= EP_BLACK_A) { return a5 + (epSq - EP_BLACK_A); }
-    
-    return noSquare;
-}
+
+
+
 
 
 const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

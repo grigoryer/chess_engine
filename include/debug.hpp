@@ -1,6 +1,7 @@
 #pragma once
 #include <constants.hpp>
 #include <position.hpp>
+#include <iostream>
 
 //debug functions
 inline void printBoard(Bitboard bitboard)
@@ -39,7 +40,7 @@ inline void printPieceBoard(Board &b)
         for (int file = 0; file < NUM_FILES; ++file)
         {
             Square sq = rank * 8 + file;
-            char c = uniquePieceArray[b.pieceList[sq]];
+            char c = uniquePieceArray[static_cast<int>(b.pieceList[sq])];
             cout << c << ' ';
         }
         cout << '\n';

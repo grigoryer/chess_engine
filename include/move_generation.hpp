@@ -60,19 +60,15 @@ ExtdMove* genPawnsQuiet(ExtdMove* list, Board& b, Bitboard target)
 
     if (S == WHITE)
     {
-        pawns = shift<NORTH>(pawns);
-        doublePawns = shift<NORTH>(pawns & Rank3BB);
+        pawns = shift<NORTH>(pawns) & target;
+        doublePawns = shift<NORTH>(pawns & Rank3BB) & target;
         fromDirection = SOUTH;
-        pawns &= target;
-        doublePawns &= target;
     }
     else
     {
         pawns = shift<SOUTH>(pawns) & target;
         fromDirection = NORTH;
         doublePawns = shift<SOUTH>(pawns & Rank6BB) & target;
-        pawns &= target;
-        doublePawns &= target;
     }
 
     while(doublePawns)
@@ -97,13 +93,13 @@ ExtdMove* genPawnsCapture(ExtdMove* list, Board& b, Bitboard target)
 {
     Bitboard pawns = b.getUniquePiece(S, PAWN);
     
-    if(b.curState.epSq != EP_NONE)
+    if(b.curState.epSq != EpSquare::NONE)
     {
         Square epLocation = epsquareToSquare(b.curState.epSq);
         Bitboard epAttackers = Attacks::pawnAttacks[S ^ 1][epLocation] & pawns;
         while(epAttackers) 
         {
-            list->setMove(popLsb(epAttackers), epLocation, PAWN, true, NONE, false, true);
+            list->setMove(popLsb(epAttackers), epLocation, PAWN, false, NONE, false, true);
             list++;
         }
     }
@@ -190,12 +186,12 @@ inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, 
 {
     if(side == WHITE)
     {
-        if((WK & castleRights) == WK && !getBit(occ, f1) && !getBit(occ, g1))
-        { 
+        if(((Castling::WK & castleRights) == Castling::WK) && !getBit(occ, f1) && !getBit(occ, g1))
+        {
             list->setMove(e1, g1, KING, false, NONE, false, false, true); 
             list++;
         }
-        if ((WQ & castleRights) == WQ && !getBit(occ, b1) && !getBit(occ, c1) && !getBit(occ, d1))
+        if(((Castling::WQ & castleRights) == Castling::WQ) && !getBit(occ, b1) && !getBit(occ, c1) && !getBit(occ, d1))
         { 
             list->setMove(e1, c1, KING, false, NONE, false, false, true); 
             list++;
@@ -203,18 +199,17 @@ inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, 
     }
     else
     {
-        if((BK & castleRights) == BK && !getBit(occ, f8) && !getBit(occ, g8))
+        if(((Castling::BK & castleRights) == Castling::BK) && !getBit(occ, f8) && !getBit(occ, g8))
         { 
             list->setMove(e8, g8, KING, false, NONE, false, false, true); 
             list++;
         }
-        if ((BQ & castleRights) == BQ && !getBit(occ, b8) && !getBit(occ, c8) && !getBit(occ, d8))
+        if (((Castling::BQ & castleRights) == Castling::BQ) && !getBit(occ, b8) && !getBit(occ, c8) && !getBit(occ, d8))
         {
             list->setMove(e8, c8, KING, false, NONE, false, false, true); 
             list++;
         }
     }
-
     return list;
 }
 

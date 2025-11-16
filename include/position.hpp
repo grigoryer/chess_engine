@@ -6,11 +6,15 @@
 class State
 {
 public:
-    EpSquare epSq = EP_NONE;
-    Castling castlingRights = ALL_CASTLING;
+    Key hash = 0;
+    EpSquare epSq = EpSquare::NONE;
+    Castling castlingRights = Castling::ALL;
 
     std::array<std::array<Bitboard, NUM_PIECES>, NUM_SIDES> checkSqs;
     std::array<Bitboard, NUM_SIDES> checkingSqs;
+
+    U16 halfmoveCount;
+    U16 fullmoveCount;
 };
 
 class Board
@@ -19,11 +23,16 @@ public:
     //bitboards and piece mailbox
     std::array<Bitboard, NUM_PIECES> pieceBB;
     std::array<Bitboard, NUM_SIDES> sideBB;
-    std::array<Piece, NUM_SQUARES> pieceList;
+    std::array<UniquePiece, NUM_SQUARES> pieceList;
     Bitboard occupancy;
 
     State curState;
     Side curSide;
+
+
+    std::array<State, MAX_HISTORY> stateHistory;
+    int historyCount = 0;
+
     void fenParser(const std::string& fen);
     void init();
 
@@ -43,5 +52,4 @@ public:
     {
         return pieceBB[p] & sideBB[s];
     }
-
 };
