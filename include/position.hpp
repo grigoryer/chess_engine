@@ -9,10 +9,6 @@ public:
     Key hash = 0;
     EpSquare epSq = EpSquare::NONE;
     Castling castlingRights = Castling::ALL;
-
-    std::array<std::array<Bitboard, NUM_PIECES>, NUM_SIDES> checkSqs;
-    std::array<Bitboard, NUM_SIDES> checkingSqs;
-
     U16 halfmoveCount;
     U16 fullmoveCount;
 };
@@ -28,6 +24,10 @@ public:
 
     State curState;
     Side curSide;
+
+
+    std::array<std::array<Bitboard, NUM_PIECES>, NUM_SIDES> checkSqs;
+    std::array<Bitboard, NUM_SIDES> checkingSqs;
 
 
     std::array<State, MAX_HISTORY> stateHistory;

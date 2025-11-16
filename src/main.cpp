@@ -11,26 +11,29 @@
 
 
 void testMoveAmount(Board& board);
+
 int main()
 {
     MoveList list;
-    Board board(perft_5);
-    Bitboard blockers = generateBlockers(board, board.curSide);    
+    Board board(perft_2);
+    Bitboard blockers = generateBlockers(board, board.curSide);
 
-    //testMoveAmount(board);
+    testMoveAmount(board);
     auto end = generateLegals(list.list.begin(), board, board.curSide);
     for(auto i = list.list.begin(); i < end; i++)
     {
-        auto board_copy = board;
-        if(!isLegal(i, board_copy, board_copy.curSide, blockers) || !i->isPromoted()) { continue; }
-        printPieceBoard(board_copy);
+        if(!isLegal(i, board, board.curSide, blockers)) { continue; }
+
+        doMove(board, i);
+        printPieceBoard(board);
+        std::cout << (int)board.curState.hash;
         std::cin.get();
-        doMove(board_copy, i);
-        printPieceBoard(board_copy);
+        undoMove(board, i);
+        printPieceBoard(board);
+        std::cout << (int)board.curState.hash;
+
         std::cin.get();
     }
-
-
 
     return 0;
 }
@@ -52,8 +55,14 @@ void testMoveAmount(Board& board)
     end = generateLegals(end, board, board.curSide);
     auto endTime = std::chrono::high_resolution_clock::now();
 
+    int legalCount = 0;
     for (auto m = list.list.begin(); m != end; ++m)
     {
+        if(!isLegal(m, board, board.curSide, generateBlockers(board, board.curSide)))
+        {
+            continue;
+        }
+
         std::cout << "From: " << (int)m->getFrom() 
                 << " To: " << (int)m->getTo()
                 << " Piece: " << (int) m->getPiece()
@@ -62,8 +71,10 @@ void testMoveAmount(Board& board)
                 << " Promo: " << (int)m->getPromoted()
                 << " Castle: " << (int)m->isCastle()
                 << "\n";
+                legalCount++;
+
     }
 
-    std::cout << "\nCOUNT OF MOVES: " << end - list.list.begin();
+    std::cout << "\nCOUNT OF MOVES: " << legalCount;
 
 }

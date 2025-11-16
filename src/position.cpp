@@ -179,21 +179,21 @@ void Board::setCheckSqs(Side s)
 {
     Square sq = lsb(getUniquePiece(s, KING));
 
-    curState.checkSqs[s][PAWN]   =   Attacks::getPieceAttacks<PAWN>(sq, occupancy, s);
-    curState.checkSqs[s][KNIGHT] =   Attacks::getPieceAttacks<KNIGHT>(sq, occupancy, s);
-    curState.checkSqs[s][BISHOP] =   Attacks::getPieceAttacks<BISHOP>(sq, occupancy, s);
-    curState.checkSqs[s][ROOK]   =   Attacks::getPieceAttacks<ROOK>(sq, occupancy, s);
-    curState.checkSqs[s][QUEEN]  =   curState.checkSqs[s][ROOK] | curState.checkSqs[s][BISHOP];    
+    checkSqs[s][PAWN]   =   Attacks::getPieceAttacks<PAWN>(sq, occupancy, s);
+    checkSqs[s][KNIGHT] =   Attacks::getPieceAttacks<KNIGHT>(sq, occupancy, s);
+    checkSqs[s][BISHOP] =   Attacks::getPieceAttacks<BISHOP>(sq, occupancy, s);
+    checkSqs[s][ROOK]   =   Attacks::getPieceAttacks<ROOK>(sq, occupancy, s);
+    checkSqs[s][QUEEN]  =   checkSqs[s][ROOK] | checkSqs[s][BISHOP];    
 }
 
 bool Board::isCheck(Side s)
 {
-    curState.checkingSqs[s] = 0ULL;
+    checkingSqs[s] = 0ULL;
     Side enemy = s ^ 1;
 
     for(Piece p = QUEEN; p <= PAWN; p++)
     {
-        curState.checkingSqs[s] |= curState.checkSqs[s][p] & getUniquePiece(enemy, p);
+        checkingSqs[s] |= checkSqs[s][p] & getUniquePiece(enemy, p);
     }
-    return curState.checkingSqs[s] != 0ULL;
+    return checkingSqs[s] != 0ULL;
 }

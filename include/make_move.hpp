@@ -7,7 +7,7 @@
 
 
 void doMove(Board& b, ExtdMove* move);
-void unmakeMove();
+void undoMove(Board& b, ExtdMove* move);
 
 inline void removePiece(Board& b, Side s, Piece piece, Square sq)
 {
