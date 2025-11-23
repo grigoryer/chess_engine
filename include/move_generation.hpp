@@ -12,7 +12,7 @@ Bitboard generateBlockers(Board& b, Side s);
 bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers);
 
 template<MoveType Mt>
-ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard target)
+ExtdMove* genPromotion(ExtdMove* list, Board& b, Bitboard promoPawns, Side side, Bitboard target)
 {
     if constexpr (Mt == CAPTURE)
     {
@@ -23,9 +23,10 @@ ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard 
             while (attacks) 
             {
                 Square to = popLsb(attacks);
+                Piece captPiece = b.pieceList[to];
                 for(Piece promo = QUEEN; promo <= KNIGHT; promo++)
                 {
-                    list->setMove(sq, to,PAWN, true, promo);
+                    list->setMove(sq, to,PAWN, captPiece, promo);
                     list++;
                 }
             }
@@ -42,7 +43,7 @@ ExtdMove* genPromotion(ExtdMove* list, Bitboard promoPawns, Side side, Bitboard 
             Square sq = popLsb(promoPawns);
             for(Piece promo = QUEEN; promo < KNIGHT; promo++)
             {
-                list->setMove(sq + fromDirection, sq, PAWN, false, promo);
+                list->setMove(sq + fromDirection, sq, PAWN, NONE, promo);
                 list++;
             }
         }
@@ -74,7 +75,7 @@ ExtdMove* genPawnsQuiet(ExtdMove* list, Board& b, Bitboard target, Bitboard pawn
     while(doublePawns)
     {
         Square sq = popLsb(doublePawns);
-        list->setMove(sq + fromDirection + fromDirection, sq, PAWN, false, NONE, true);
+        list->setMove(sq + fromDirection + fromDirection, sq, PAWN, NONE, NONE, true);
         list++;
     }
 
@@ -91,13 +92,14 @@ ExtdMove* genPawnsQuiet(ExtdMove* list, Board& b, Bitboard target, Bitboard pawn
 template<Side S>
 ExtdMove* genPawnsCapture(ExtdMove* list, Board& b, Bitboard target, Bitboard pawns)
 {   
+    //enpassant generation
     if(b.curState.epSq != EpSquare::NONE)
     {
         Square epLocation = epsquareToSquare(b.curState.epSq);
         Bitboard epAttackers = Attacks::pawnAttacks[S ^ 1][epLocation] & pawns;
         while(epAttackers) 
         {
-            list->setMove(popLsb(epAttackers), epLocation, PAWN, false, NONE, false, true);
+            list->setMove(popLsb(epAttackers), epLocation, PAWN, NONE, NONE, false, true);
             list++;
         }
     }
@@ -108,9 +110,11 @@ ExtdMove* genPawnsCapture(ExtdMove* list, Board& b, Bitboard target, Bitboard pa
         Bitboard attacks = Attacks::pawnAttacks[S][sq] & target;
         while(attacks) 
         {
-            list->setMove(sq, popLsb(attacks), PAWN, true);
+            Square to = popLsb(attacks);
+            list->setMove(sq, to, PAWN, b.pieceList[to]);
             list++;
         }
+
     }
     return list;
 }
@@ -126,7 +130,7 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
 
     if(promoPawns != 0)
     {
-        list = genPromotion<Mt>(list, promoPawns, side, target);
+        list = genPromotion<Mt>(list, b, promoPawns, side, target);
     }
 
     if constexpr (Mt == QUIET)
@@ -170,10 +174,7 @@ ExtdMove* genPieceMoves(ExtdMove* list, Board& b, Side side, Bitboard target)
         while(movesBB)
         {
             Square to = popLsb(movesBB);
-            bool capture = false;
-            if(Mt == CAPTURE || getBit(b.getSide(side ^ 1), to)) { capture = true; } // works quick since we short cirucit if statement
-
-            list->setMove(from, to, P, capture);
+            list->setMove(from, to, P, b.pieceList[to]);
             list++;
         }
     }
@@ -186,12 +187,12 @@ inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, 
     {
         if(((Castling::WK & castleRights) == Castling::WK) && !getBit(occ, f1) && !getBit(occ, g1))
         {
-            list->setMove(e1, g1, KING, false, NONE, false, false, true); 
+            list->setMove(e1, g1, KING, NONE, NONE, false, false, true); 
             list++;
         }
         if(((Castling::WQ & castleRights) == Castling::WQ) && !getBit(occ, b1) && !getBit(occ, c1) && !getBit(occ, d1))
         { 
-            list->setMove(e1, c1, KING, false, NONE, false, false, true); 
+            list->setMove(e1, c1, KING, NONE, NONE, false, false, true); 
             list++;
         }
     }
@@ -199,12 +200,12 @@ inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, 
     {
         if(((Castling::BK & castleRights) == Castling::BK) && !getBit(occ, f8) && !getBit(occ, g8))
         { 
-            list->setMove(e8, g8, KING, false, NONE, false, false, true); 
+            list->setMove(e8, g8, KING, NONE, NONE, false, false, true); 
             list++;
         }
         if (((Castling::BQ & castleRights) == Castling::BQ) && !getBit(occ, b8) && !getBit(occ, c8) && !getBit(occ, d8))
         {
-            list->setMove(e8, c8, KING, false, NONE, false, false, true); 
+            list->setMove(e8, c8, KING, NONE, NONE, false, false, true); 
             list++;
         }
     }
@@ -231,7 +232,7 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b, Side s)
             list = genPieceMoves<KING, Mt>(list, b,s, kingTarget);
         }
     }
-    else if constexpr (Mt == CAPTURE )
+    else if constexpr (Mt == CAPTURE)
     {
         target = b.getSide(s ^ 1);
         list = genPieceMoves<KING, Mt>(list, b,s, target);
@@ -243,11 +244,13 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b, Side s)
         list = genCastle(list, b.curState.castlingRights, b.occupancy, s);
     }
 
+
+    list = genPieceMoves<QUEEN, Mt>(list, b,s, target);
     list = genPieceMoves<KNIGHT, Mt>(list, b, s, target);
     list = genPieceMoves<BISHOP, Mt>(list, b,s, target);
     list = genPieceMoves<ROOK, Mt>(list, b,s, target);
-    list = genPieceMoves<QUEEN, Mt>(list, b,s, target);
     list = genPawns<Mt>(list, b, s, target);
+    
     return list;
 }
 

@@ -29,20 +29,21 @@ Bitboard generateBlockers(Board& b, Side s)
 
     while(pinners) 
     {
-        Bitboard bb = (Between::betweenBB(ksq, popLsb(pinners)) & b.occupancy) & b.getSide(s);
+        Square pinnerSq = popLsb(pinners);
+        Bitboard bb = (Between::betweenBB(ksq, pinnerSq) & b.occupancy);
         if(bitCount(bb) == 1)
         {
-            blockers |= bb;
+            blockers |= (bb & b.getSide(s));
         }
     }
 
     pinners = (b.getUniquePiece(enemy, BISHOP) | b.getUniquePiece(enemy, QUEEN)) & Attacks::getPieceAttacks<BISHOP>(ksq, 0, s);
     while(pinners) 
     {
-        Bitboard bb = (Between::betweenBB(ksq, popLsb(pinners)) & b.occupancy) & b.getSide(s);
+        Bitboard bb = (Between::betweenBB(ksq, popLsb(pinners)) & b.occupancy);
         if(bitCount(bb) == 1)
         {
-            blockers |= bb;
+            blockers |= bb & b.getSide(s);;
         }
     }
     return blockers;
@@ -104,7 +105,6 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
 ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s)
 {
     auto check = b.isCheck(s);
-
     if(check)
     {
         return list = generateMoves<EVASIONS>(list, b, s);

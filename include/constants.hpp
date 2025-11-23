@@ -30,6 +30,7 @@ constexpr int NUM_FILES      = 8;
 constexpr int NUM_PIECES     = 6;
 constexpr int NUM_CASTLING   = 16;
 constexpr int NUM_EPSQUARES  = 17;
+constexpr int NUM__TYPE_SLIDERS = 2;
 
 constexpr int MAX_MOVES      = 128;
 constexpr int MAX_HISTORY    = 512;
@@ -64,6 +65,7 @@ constexpr Bitboard Rank8BB = Rank1BB << (8 * 7);
 // ENUMERATIONS
 // ============================================================================
 
+
 enum PieceType : Piece 
 {
     KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NONE
@@ -73,14 +75,6 @@ enum Sides : Side
 {
     WHITE, BLACK
 };
-
-enum class UniquePiece : Piece 
-{
-    WK = 0, WQ = 1, WR = 2, WB = 3, WN = 4, WP = 5,
-    BK = 6, BQ = 7, BR = 8, BB = 9, BN = 10, BP = 11,
-    NONE = 12
-};
-
 
 enum File : U8
 {
@@ -135,6 +129,15 @@ enum class Castling : U8
     BLACK = 12,
     ALL = 15
 };
+
+
+enum class Alignment
+{
+    NONE,
+    STRAIGHT,
+    DIAGONAL
+};
+
 
 // Bitwise operations for Castling
 inline Castling operator | (Castling a, Castling b) 
@@ -268,19 +271,14 @@ inline Square epsquareToCaptureSquare(EpSquare epSq)
     return static_cast<Square>(Squares::a5) + (static_cast<int>(epSq) - 8);
 }
 
+inline Square squareToEPCaptureSquare(Square sq, Side s) 
+{
+    return sq + (s == WHITE ? -8 : 8);
+}
+
 inline EpSquare squareToEpsquare(Square sq, Side s) 
 {
     return static_cast<EpSquare>(squareFile(sq) + (s == BLACK ? 8 : 0));
-}
-
-inline UniquePiece pieceToUniquePiece(Piece piece, Side s)
-{
-    return static_cast<UniquePiece>(piece + (s == WHITE ? 0 : NUM_PIECES));
-}
-
-inline Piece getPieceType(UniquePiece uniquePiece)
-{
-    return static_cast<Piece>(static_cast<int>(uniquePiece) % NUM_PIECES);
 }
 
 // ============================================================================
