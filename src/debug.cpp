@@ -3,6 +3,7 @@
 #include <moves.hpp>
 #include <move_generation.hpp>
 #include <make_move.hpp>
+#include <iostream>
 
 
 
@@ -53,7 +54,7 @@ void printPieceBoard(Board &b)
             bool isWhite = b.getSide(WHITE) & (1ULL << sq);
             int pieceArr = piece + (isWhite ? 0 : 7);
             char c = uniquePieceArray[pieceArr];
-            cout << (int)piece << ' ';
+            cout << c << ' ';
         }
         cout << '\n';
     }

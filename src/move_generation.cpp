@@ -63,7 +63,7 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
         Bitboard occ = b.occupancy;
         Square epCaptureSq = epsquareToCaptureSquare(b.curState.epSq);
         popBit(occ, move->getFrom());             // remove moving pawns
-        popBit(occ,epCaptureSq);               // remove captured pawn  
+        popBit(occ,epCaptureSq);                // remove captured pawn  
         setBit(occ,move->getTo());              // add moving pawn to destination
 
         Bitboard bishop_attackers = b.getUniquePiece(enemy, BISHOP) | b.getUniquePiece(enemy, QUEEN);
@@ -110,7 +110,7 @@ ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s)
         return list = generateMoves<EVASIONS>(list, b, s);
     }
 
-    list = generateMoves<QUIET>(list, b, s);
     list = generateMoves<CAPTURE>(list, b, s);
+    list = generateMoves<QUIET>(list, b, s);
     return list;
 }
