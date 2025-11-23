@@ -41,7 +41,7 @@ ExtdMove* genPromotion(ExtdMove* list, Board& b, Bitboard promoPawns, Side side,
         while (promoPawns) 
         {
             Square sq = popLsb(promoPawns);
-            for(Piece promo = QUEEN; promo < KNIGHT; promo++)
+            for(Piece promo = QUEEN; promo <= KNIGHT; promo++)
             {
                 list->setMove(sq + fromDirection, sq, PAWN, NONE, promo);
                 list++;

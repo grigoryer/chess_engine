@@ -11,13 +11,15 @@
 
 
 void testMoveAmount(Board& board);
+void testMoveAmount1(Board& board);
 
 using std::cout;
 
 int main()
 {
-    Board b("3kq3/4q3/8/8/8/3NNN2/3NKN2/3NNN2 w - - 0 1");
-    testMoveAmount(b);
+    cout << "TEST: 1\n\n";
+    Board b(killer_position);
+    testMoveAmount1(b);
 }
 
 
@@ -37,10 +39,17 @@ void testMoveAmount1(Board& board)
     end = generateLegals(end, board, board.curSide);
     auto endTime = std::chrono::high_resolution_clock::now();
 
+    Bitboard blockers = generateBlockers(board, board.curSide);
+
     int legalCount = 0;
+
+    printDebug(board);
     for (auto m = list.list.begin(); m != end; ++m)
     {
-        
+        if(!isLegal(m, board, board.curSide, blockers))
+        {
+            continue;
+        }
 
         std::cout << "From: " << SQUARE_NAMES[(int)m->getFrom()] 
                 << " To: " << SQUARE_NAMES[(int)m->getTo()]
@@ -52,13 +61,13 @@ void testMoveAmount1(Board& board)
                 << "\n";
                 legalCount++;
 
-        Board copy = board;
 
-
-        printDebug(copy);
+       
+        doMove(board, m);
+        printDebug(board);
         std::cin.get();
-        doMove(copy, m);
-        printDebug(copy);
+        undoMove(board, m);
+        printDebug(board);
         std::cin.get();
     }
 
@@ -101,16 +110,6 @@ void testMoveAmount(Board& board)
                 legalCount++;
 
         Board copy = board;
-
-
-        printDebug(copy);
-        std::cin.get();
-        doMove(copy, m);
-        //testMoveAmount1(copy);
-        printDebug(copy);
-
-        std::cout << "IS CHECK: " << (copy.isCheck(copy.curSide) ? "YES\n" : " NO\n");
-        std::cin.get();
     }
 
     std::cout << "\nCount no legal check: " << end - list.list.begin();

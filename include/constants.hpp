@@ -154,6 +154,11 @@ inline Castling operator&(Castling a, Castling b) {
     return Castling(static_cast<U8>(a) & static_cast<U8>(b));
 }
 
+inline Castling& operator&=(Castling& a, Castling b) {
+    a = a & b;
+    return a;
+}
+
 inline Castling operator~(Castling a) {
     return Castling(~static_cast<U8>(a));
 }
@@ -253,6 +258,7 @@ inline U8 squareFile(Square sq)
     return sq % 8;
 }
 
+//convert EPSQUARE to the TO square
 inline Square epsquareToSquare(EpSquare epSq) 
 {
     if (epSq == EpSquare::NONE) return static_cast<Square>(Squares::noSquare);
@@ -262,6 +268,7 @@ inline Square epsquareToSquare(EpSquare epSq)
     return static_cast<Square>(Squares::a6) + (static_cast<int>(epSq) - 8);
 }
 
+//convert EPSQUARE to where the PAWN GETS CAPTURED.
 inline Square epsquareToCaptureSquare(EpSquare epSq) 
 {
     if (epSq == EpSquare::NONE) return static_cast<Square>(Squares::noSquare);
@@ -271,6 +278,7 @@ inline Square epsquareToCaptureSquare(EpSquare epSq)
     return static_cast<Square>(Squares::a5) + (static_cast<int>(epSq) - 8);
 }
 
+//convert
 inline Square squareToEPCaptureSquare(Square sq, Side s) 
 {
     return sq + (s == WHITE ? -8 : 8);
