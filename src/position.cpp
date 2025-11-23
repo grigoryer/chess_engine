@@ -140,26 +140,26 @@ void Board::init()
     occupancy = sideBB[WHITE] | sideBB[BLACK];
 
     //fill peice board
-    pieceList.fill(UniquePiece::NONE);
+    pieceList.fill(NONE);
     for (Piece piece = KING; piece <= PAWN; piece++)
     {
         Bitboard whitePieceBB = getUniquePiece(WHITE, piece);
         while (whitePieceBB != 0)
         {
             Square sq = popLsb(whitePieceBB);
-            pieceList[sq] = static_cast<UniquePiece>(piece); // K–P
+            pieceList[sq] = piece;
         }
 
         Bitboard blackPieceBB = getUniquePiece(BLACK, piece);
         while (blackPieceBB != 0)
         {
             Square sq = popLsb(blackPieceBB);
-            pieceList[sq] = static_cast<UniquePiece>(piece + NUM_PIECES); // k-p
+            pieceList[sq] = piece; // k-p
         }
     }
 
-    setCheckSqs(WHITE);
-    setCheckSqs(BLACK);
+    setChecking(WHITE);
+    setChecking(BLACK);
     curState.hash = ZobristHashing::initailizeHash(*this);
 }
 
@@ -175,25 +175,18 @@ Board::Board(const std::string& fen)
     init();
 }
 
-void Board::setCheckSqs(Side s)
+void Board::setChecking(Side s)
 {
-    Square sq = lsb(getUniquePiece(s, KING));
-
-    checkSqs[s][PAWN]   =   Attacks::getPieceAttacks<PAWN>(sq, occupancy, s);
-    checkSqs[s][KNIGHT] =   Attacks::getPieceAttacks<KNIGHT>(sq, occupancy, s);
-    checkSqs[s][BISHOP] =   Attacks::getPieceAttacks<BISHOP>(sq, occupancy, s);
-    checkSqs[s][ROOK]   =   Attacks::getPieceAttacks<ROOK>(sq, occupancy, s);
-    checkSqs[s][QUEEN]  =   checkSqs[s][ROOK] | checkSqs[s][BISHOP];    
+    checkingSqs[s] = 0ULL;
+    Square ksq = lsb(getUniquePiece(s, KING));
+    Side enemy = s ^ 1;
+    for(Piece p = QUEEN; p <= PAWN; p++)
+    {
+        checkingSqs[s] |= Attacks::getPieceAttacksRuntime(static_cast<PieceType>(p), ksq, occupancy, enemy) & getUniquePiece(enemy, p);
+    }
 }
 
 bool Board::isCheck(Side s)
 {
-    checkingSqs[s] = 0ULL;
-    Side enemy = s ^ 1;
-
-    for(Piece p = QUEEN; p <= PAWN; p++)
-    {
-        checkingSqs[s] |= checkSqs[s][p] & getUniquePiece(enemy, p);
-    }
-    return checkingSqs[s] != 0ULL;
+    return (checkingSqs[s] != 0ULL);
 }

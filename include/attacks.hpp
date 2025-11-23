@@ -81,4 +81,7 @@ namespace Attacks
             return pawnAttacks[s][sq];
         }
     }
+
+    Bitboard getPieceAttacksRuntime(PieceType p, Square sq, Bitboard occ, Side s);
+    
 }

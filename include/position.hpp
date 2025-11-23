@@ -9,8 +9,9 @@ public:
     Key hash = 0;
     EpSquare epSq = EpSquare::NONE;
     Castling castlingRights = Castling::ALL;
-    U16 halfmoveCount;
-    U16 fullmoveCount;
+    U16 halfmoveCount = 0;
+    U16 fullmoveCount = 0;
+    Piece capturedPiece = NONE;
 };
 
 class Board
@@ -19,15 +20,15 @@ public:
     //bitboards and piece mailbox
     std::array<Bitboard, NUM_PIECES> pieceBB;
     std::array<Bitboard, NUM_SIDES> sideBB;
-    std::array<UniquePiece, NUM_SQUARES> pieceList;
+    std::array<Piece, NUM_SQUARES> pieceList;
     Bitboard occupancy;
 
     State curState;
     Side curSide;
 
-
-    std::array<std::array<Bitboard, NUM_PIECES>, NUM_SIDES> checkSqs;
-    std::array<Bitboard, NUM_SIDES> checkingSqs;
+    std::array<Bitboard, NUM_SIDES> checkingSqs{0};
+    std::array<Bitboard, NUM_SIDES> blockersBB{0};
+    std::array<Square, NUM_SIDES> kingSq;
 
 
     std::array<State, MAX_HISTORY> stateHistory;
@@ -39,7 +40,7 @@ public:
     Board();
     Board(const std::string& fen);
 
-    void setCheckSqs(Side s);
+    void setChecking(Side s);
     bool isCheck(Side s);
 
     

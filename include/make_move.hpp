@@ -4,17 +4,14 @@
 #include <constants.hpp>
 #include <moves.hpp>
 
-
-
-void doMove(Board& b, ExtdMove* move);
-void undoMove(Board& b, ExtdMove* move);
+void doMove(Board &b, ExtdMove* move);
 
 inline void removePiece(Board& b, Side s, Piece piece, Square sq)
 {
     popBit(b.pieceBB[piece], sq);
     popBit(b.sideBB[s], sq);
     popBit(b.occupancy, sq);
-    b.pieceList[sq] = UniquePiece::NONE; 
+    b.pieceList[sq] = NONE; 
     b.curState.hash ^= ZobristHashing::zobPiece(s, piece, sq);
 }
 
@@ -23,8 +20,7 @@ inline void putPiece(Board& b, Side s, Piece piece, Square sq)
     setBit(b.pieceBB[piece], sq);
     setBit(b.sideBB[s], sq);
     setBit(b.occupancy, sq);
-    b.pieceList[sq] = static_cast<UniquePiece>(piece + (s == WHITE ? 0 : NUM_PIECES));
-
+    b.pieceList[sq] = piece;
     b.curState.hash ^= ZobristHashing::zobPiece(s, piece, sq);
 }
 
@@ -58,6 +54,15 @@ inline void clearEpsquare(Board& b)
 
 inline void movePiece(Board& b, Side s, Piece piece, Square from, Square to)
 {
-    removePiece(b, s, piece, from);
-    putPiece(b, s, piece, to);
+    U64 mask = (1ULL << from) | (1ULL << to);
+
+    b.pieceBB[piece] ^= mask;
+    b.sideBB[s]  ^= mask;
+    b.occupancy  ^= mask;
+    
+    b.curState.hash ^= ZobristHashing::zobPiece(s, piece, from);
+    b.curState.hash ^= ZobristHashing::zobPiece(s, piece, to);
+
+    b.pieceList[from] = NONE; 
+    b.pieceList[to] = piece; 
 }
