@@ -10,3 +10,11 @@ void printPieceBoard(Board &b);
 void printState(State& state);
 
 void printDebug(Board& b);
+
+int perft(Board& b, int depth);
+
+int perftDivide(Board& b, int depth);
+
+int perftDebug(Board& b, int depth);
+
+void perftDivideDebug(Board& b, int depth);

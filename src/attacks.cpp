@@ -305,23 +305,6 @@ Bitboard genBishopAttacksOnfly(Square sq, Bitboard occ)
 
 namespace Attacks
 {
-
-    Bitboard getPieceAttacksRuntime(PieceType p, Square sq, Bitboard occ, Side s)
-    {
-        switch (p)
-        {
-            case PAWN:   return getPieceAttacks<PAWN>(sq, occ, s);
-            case KNIGHT: return getPieceAttacks<KNIGHT>(sq, occ, s);
-            case BISHOP: return getPieceAttacks<BISHOP>(sq, occ, s);
-            case ROOK:   return getPieceAttacks<ROOK>(sq, occ, s);
-            case QUEEN:  return getPieceAttacks<QUEEN>(sq, occ, s);
-            case KING:   return getPieceAttacks<KING>(sq, occ, s);
-            default:     return 0;
-        }
-    }
-
-
-
     Bitboard getRookAttacks(Square sq, Bitboard occ)
     {  
         occ &= maskRookAttacks(sq);  

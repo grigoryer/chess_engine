@@ -95,7 +95,6 @@ Bitboard generateThrough(Square s1, Square s2)
 }
 
 
-
 namespace Between
 {
     void initializeBetween()

@@ -3,23 +3,23 @@
 #include "constants.hpp"
 #include "debug.hpp"
 #include "moves.hpp"
+#include <iostream>
 #include <make_move.hpp>
 
 
 //will see if current move results in a check, or dsicovered check. Adds all checking piece 1-2 onto a bitboard.
 //only sees if piece that moved gives a direct check to king and then we do a check the piece "FROM" square if its on a diagonal 
 //with king or straight line. Only 2 areas we check so very quick and incremental.
-void updateChecking(Board &b, Piece piece, Square from, Square to)
+inline void updateChecking(Board &b, Piece piece, Square from, Square to)
 {
     //get piece type thats checking
     PieceType pt = static_cast<PieceType>(piece);
     Side s = b.curSide;
     Side enemy = b.curSide ^ 1;
-    b.checkingSqs[enemy] = 0ULL; //reset each time since we cant be in check twice.
     Square ksq = lsb(b.getUniquePiece(enemy, KING));
 
     //see if piece that move gives direct check
-    b.checkingSqs[enemy] |= b.getUniquePiece(s, piece) & Attacks::getPieceAttacksRuntime(pt, ksq, b.occupancy, enemy);
+    b.checkingSqs[enemy] |= (1ULL << to) & Attacks::getPieceAttacksRuntime(pt, ksq, b.occupancy, enemy);
 
     //get allignement for discovred check
     Alignment alligned = Between::getAlignment(ksq, from);
@@ -30,19 +30,44 @@ void updateChecking(Board &b, Piece piece, Square from, Square to)
     else if(alligned == Alignment::STRAIGHT) //straight means only rook attack check. using magic bitboard rather than xray since it is faster.
     {
         //sees where rooks can attack enemy king. and overlaps it with our rooks nad queens.
-        b.checkingSqs[enemy] |= Attacks::getRookAttacks(ksq, b.occupancy) & (b.getUniquePiece(b.curSide, ROOK) | b.getUniquePiece(b.curSide, QUEEN));
+        b.checkingSqs[enemy] |= Attacks::getRookAttacks(ksq, b.occupancy) & ((b.pieceBB[ROOK] | b.pieceBB[QUEEN]) & b.sideBB[s]);
         return;
     }
     else if (alligned == Alignment::DIAGONAL)  //diagonal means only bishop attack check.
     {
         //sees where bishops can attack enemy king. and overlaps it with our rooks and queens.
-        b.checkingSqs[enemy] |= Attacks::getBishopAttacks(ksq, b.occupancy) & (b.getUniquePiece(b.curSide, BISHOP) | b.getUniquePiece(b.curSide, QUEEN));
+        b.checkingSqs[enemy] |= Attacks::getBishopAttacks(ksq, b.occupancy) & ((b.pieceBB[BISHOP] | b.pieceBB[QUEEN]) & b.sideBB[s]);
         return;
     }
 }
 
+//since enpassant allows for possible 3 attacks, we make a dedicated check for the place where the captued pawn gets removed.
+inline void updateCheckingEnpassant(Board &b, Square capturedSq, Side s)
+{
+    Side enemy = s ^ 1;
+    Square ksq = lsb(b.getUniquePiece(enemy, KING));
+    
+    // Discovered check from *captured pawn removal*
+    Alignment alligned = Between::getAlignment(ksq, capturedSq);
+    if(alligned == Alignment::NONE) //if none no need to check
+    {
+        return;
+    }
+    else if(alligned == Alignment::STRAIGHT) 
+    {
+        b.checkingSqs[enemy] |= Attacks::getRookAttacks(ksq, b.occupancy) & ((b.pieceBB[ROOK] | b.pieceBB[QUEEN]) & b.sideBB[s]);
+        return;
+    } 
+    else if (alligned == Alignment::DIAGONAL) 
+    {
+        b.checkingSqs[enemy] |= Attacks::getBishopAttacks(ksq, b.occupancy) & ((b.pieceBB[BISHOP] | b.pieceBB[QUEEN]) & b.sideBB[s]);
+        return;
+    }
+
+}
+
 //updates castling permissions depedning on piece.
-void reviewCastlingPermissions(Board& b, Piece captured, Square from, Square to, Piece piece, Side s)
+inline void reviewCastlingPermissions(Board& b, Piece captured, Square from, Square to, Piece piece, Side s)
 {
     Castling newCastlingPerm = b.curState.castlingRights;
     
@@ -77,7 +102,7 @@ void reviewCastlingPermissions(Board& b, Piece captured, Square from, Square to,
 }
 
 // see where to move rook depending on where king castles. 
-void castlingMoveHelper(Board& b, Side s, Square kingTo)
+inline void castlingMoveHelper(Board& b, Side s, Square kingTo, Square& checkTo)
 {
     Square rookFrom = noSquare;
     Square rookTo = noSquare;
@@ -104,11 +129,12 @@ void castlingMoveHelper(Board& b, Side s, Square kingTo)
     
     //update permissions and move rook.
     Castling perm = static_cast<Castling>(b.curState.castlingRights & ~(s == WHITE ? Castling::WHITE : Castling::BLACK));
+    checkTo = rookTo;
     updateCastlingPerm(b, perm);
     movePiece(b, s, ROOK, rookFrom, rookTo);
 }
 
-void afterMoveHelper(Board &b, ExtdMove* move)
+inline void afterMoveHelper(Board &b, ExtdMove* move, Piece piece, Square checkFrom, Square checkTo)
 {
 
     //update halfmove clock if its not a capture or pawn move. //full move every other turn
@@ -116,9 +142,8 @@ void afterMoveHelper(Board &b, ExtdMove* move)
     if(b.curSide == BLACK) { b.curState.fullmoveCount++; }
     if(move->getPiece() == PAWN || move->getCapture() != NONE) { b.curState.halfmoveCount = 0; }   
     
-    reviewCastlingPermissions(b, move->getCapture(), move->getFrom(), move->getTo(), move->getPiece(), b.curSide);
     //redo checking for other side. if this move puts the other side in check
-    updateChecking(b, move->getPiece(), move->getFrom(), move->getTo());
+    updateChecking(b, piece, checkFrom, checkTo);
     swapSides(b);
 }
 
@@ -129,13 +154,16 @@ void doMove(Board &b, ExtdMove* move)
     Square from = move->getFrom();
     Square to = move->getTo();
     Piece piece = move->getPiece();
+    Piece checkingPiece = piece;
+    Square checkFrom = from;
+    Square checkTo = to;
+    b.checkingSqs[enemy] = 0ULL;
 
     b.stateHistory[b.historyCount] = b.curState;
     b.historyCount++;
     //increment history
 
-
-    b.curState.epSq = EpSquare::NONE;
+    clearEpsquare(b);
 
     if(move->getCapture() != NONE)
     {
@@ -146,30 +174,35 @@ void doMove(Board &b, ExtdMove* move)
 
     if(move->isEnpassant())
     {
-        removePiece(b, enemy, PAWN, squareToEPCaptureSquare(to, s));
-        b.curState.capturedPiece = PAWN;
+        Square capturedSq = squareToEPCaptureSquare(to, s);
+        removePiece(b, enemy, PAWN, capturedSq);
+        updateCheckingEnpassant(b, capturedSq, s);
     }
-    
-    if(move->getPromoted() != NONE) //early return, since we are changing piece
+    else if(move->isDouble())
     {
-        removePiece(b, enemy, piece, from);
-        putPiece(b, s, move->getPromoted(), to);
-        afterMoveHelper(b, move);
-        return;
-    }
-
-    if(move->isDouble())
-    {
-        b.curState.epSq = squareToEpsquare(to, s);
+        setEpsquare(b, squareToEpsquare(to, s));
     }
 
     if(move->isCastle())
     {
-        castlingMoveHelper(b, s, to);
+        castlingMoveHelper(b, s, to, checkTo);
+        checkingPiece = ROOK;
+    }
+    else
+    {
+        reviewCastlingPermissions(b, move->getCapture(), from, to, piece, b.curSide);
+    }
+    
+    if(move->getPromoted() != NONE) //early return, since we are changing piece
+    {
+        removePiece(b, s, piece, from);
+        putPiece(b, s, move->getPromoted(), to);
+        afterMoveHelper(b, move, move->getPromoted(), checkFrom, checkTo);
+        return;
     }
 
     movePiece(b, b.curSide, piece, from, to);
-    afterMoveHelper(b, move);
+    afterMoveHelper(b, move, checkingPiece, checkFrom, checkTo);
 }
 
 
@@ -213,14 +246,10 @@ void undoMove(Board &b, ExtdMove* move)
     {
         movePiece(b, s, piece, to, from);
     }
-    
-
     if(move->isEnpassant())
     {
         putPiece(b, enemy, PAWN, squareToEPCaptureSquare(to, s));
-        b.curState.capturedPiece = PAWN;
     }
-
     // Restore captured piece
     if(move->getCapture() != NONE)
     {
@@ -231,4 +260,5 @@ void undoMove(Board &b, ExtdMove* move)
     //restore to prev state
     b.historyCount--;
     b.curState = b.stateHistory[b.historyCount]; 
+    updateChecking(b, move->getPiece(), move->getTo(), move->getFrom());  // Note: swapped
 }

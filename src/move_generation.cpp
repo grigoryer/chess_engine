@@ -6,14 +6,14 @@
 
 
 
-bool isSquareAttacked(Board& b, Square sq, Side s)
+bool isSquareAttacked(Board& b, Square sq, Side s, Bitboard occ)
 {
-    if (b.getUniquePiece(s ^ 1, KING) & Attacks::getPieceAttacks<KING>(sq, b.occupancy, s))     { return true; }
-    if (b.getUniquePiece(s ^ 1, QUEEN) & Attacks::getPieceAttacks<QUEEN>(sq, b.occupancy, s))   { return true; }
-    if (b.getUniquePiece(s ^ 1, ROOK) & Attacks::getPieceAttacks<ROOK>(sq, b.occupancy, s))     { return true; }
-    if (b.getUniquePiece(s ^ 1, BISHOP) & Attacks::getPieceAttacks<BISHOP>(sq, b.occupancy, s)) { return true; }
-    if (b.getUniquePiece(s ^ 1, KNIGHT) & Attacks::getPieceAttacks<KNIGHT>(sq, b.occupancy, s)) { return true; }
-    if (b.getUniquePiece(s ^ 1, PAWN) & Attacks::getPieceAttacks<PAWN>(sq, b.occupancy, s))     { return true; }
+    if (b.getUniquePiece(s ^ 1, KING) & Attacks::getPieceAttacks<KING>(sq, occ, s))     { return true; }
+    if (b.getUniquePiece(s ^ 1, QUEEN) & Attacks::getPieceAttacks<QUEEN>(sq, occ, s))   { return true; }
+    if (b.getUniquePiece(s ^ 1, ROOK) & Attacks::getPieceAttacks<ROOK>(sq, occ, s))     { return true; }
+    if (b.getUniquePiece(s ^ 1, BISHOP) & Attacks::getPieceAttacks<BISHOP>(sq, occ, s)) { return true; }
+    if (b.getUniquePiece(s ^ 1, KNIGHT) & Attacks::getPieceAttacks<KNIGHT>(sq, occ, s)) { return true; }
+    if (b.getUniquePiece(s ^ 1, PAWN) & Attacks::getPieceAttacks<PAWN>(sq, occ, s))     { return true; }
 
     return false;
 }
@@ -81,7 +81,7 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
         while(cur != to)
         {
             cur += shift; 
-            if(isSquareAttacked(b,cur, s)) 
+            if(isSquareAttacked(b,cur, s, b.occupancy)) 
             { 
                 return false; 
             }
@@ -91,7 +91,9 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
 
     if(move->getPiece() == KING)
     {
-        return !isSquareAttacked(b,to,s);
+        Bitboard occ = b.occupancy;
+        popBit(occ, move->getFrom());                   // remove moving pawns
+        return !isSquareAttacked(b, to, s, occ);
     }
 
     if(blockerBB != 0) //if this piece is a blocker

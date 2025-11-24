@@ -14,7 +14,7 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers);
 template<MoveType Mt>
 ExtdMove* genPromotion(ExtdMove* list, Board& b, Bitboard promoPawns, Side side, Bitboard target)
 {
-    if constexpr (Mt == CAPTURE)
+    if constexpr (Mt == CAPTURE || Mt == EVASIONS)
     {
         while (promoPawns) 
         {
@@ -32,7 +32,7 @@ ExtdMove* genPromotion(ExtdMove* list, Board& b, Bitboard promoPawns, Side side,
             }
         }
     }
-    else if constexpr (Mt == QUIET)
+    else if constexpr (Mt == QUIET || Mt == EVASIONS)
     {
         Direction fromDirection = (side == WHITE ? SOUTH : NORTH);
         promoPawns = (side == WHITE ? promoPawns << 8 : promoPawns >> 8); //8 means is one up and one back
@@ -185,14 +185,14 @@ inline ExtdMove* genCastle(ExtdMove* list, Castling castleRights, Bitboard occ, 
 {
     if(side == WHITE)
     {
-        if(((Castling::WK & castleRights) == Castling::WK) && !getBit(occ, f1) && !getBit(occ, g1))
-        {
-            list->setMove(e1, g1, KING, NONE, NONE, false, false, true); 
-            list++;
-        }
         if(((Castling::WQ & castleRights) == Castling::WQ) && !getBit(occ, b1) && !getBit(occ, c1) && !getBit(occ, d1))
         { 
             list->setMove(e1, c1, KING, NONE, NONE, false, false, true); 
+            list++;
+        }
+        if(((Castling::WK & castleRights) == Castling::WK) && !getBit(occ, f1) && !getBit(occ, g1))
+        {
+            list->setMove(e1, g1, KING, NONE, NONE, false, false, true); 
             list++;
         }
     }

@@ -8,19 +8,22 @@ namespace Between
 
     inline Alignment getAlignment(Square s1, Square s2)
     {
-        if (s1 == s2) { return Alignment::NONE; }
-        
-        U8 rank_diff = abs(squareRank(s1) - squareRank(s2));
-        U8 file_diff = abs(squareFile(s1) - squareFile(s2));
-        
-        // Same rank or file = straight line
-        if (rank_diff == 0 || file_diff == 0) { return Alignment::STRAIGHT; }
-        
-        // Equal rank and file difference = diagonal
-        if (rank_diff == file_diff) { return Alignment::DIAGONAL; }
-        
+        if (s1 == s2) return Alignment::NONE;
+
+        int df = (int(s1 & 7) - int(s2 & 7));     // file difference
+        int dr = (int(s1 >> 3) - int(s2 >> 3));   // rank difference
+
+        // Straight line: same file or rank
+        if (df == 0 || dr == 0)
+            return Alignment::STRAIGHT;
+
+        // Diagonal line: |df| == |dr| without abs()
+        if (df * df == dr * dr)
+            return Alignment::DIAGONAL;
+
         return Alignment::NONE;
     }
+
 
 
     inline std::array<std::array<Bitboard, NUM_SQUARES>, NUM_SQUARES> betweenArray;

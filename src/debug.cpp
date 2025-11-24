@@ -4,6 +4,7 @@
 #include <move_generation.hpp>
 #include <make_move.hpp>
 #include <iostream>
+#include <string>
 
 
 
@@ -61,7 +62,6 @@ void printPieceBoard(Board &b)
     cout << "  a b c d e f g h\n\n";
 }
 
-
 void printState(State& state)
 {
     std::cout << "\n========== STATE DEBUG ==========\n";
@@ -74,9 +74,136 @@ void printState(State& state)
     std::cout << "================================\n\n";
 }
 
-
 void printDebug(Board& b)
 {
     printPieceBoard(b);
     printState(b.curState);
+}
+
+
+
+int perft(Board& b, int depth)
+{
+    if(depth == 0)
+    {
+        return 1;
+    }
+
+    MoveList list;
+    auto end = list.list.begin();
+    end = generateLegals(end, b, b.curSide);
+
+    Bitboard blockers = generateBlockers(b, b.curSide);
+
+    int legalCount = 0;
+    U64 nodes = 0;
+
+    for (auto m = list.list.begin(); m != end; ++m)
+    {
+        if(!isLegal(m, b, b.curSide, blockers))
+        {
+            continue;
+        }
+
+        doMove(b, m);
+        nodes += perft(b, depth - 1);
+        undoMove(b, m);
+    }
+    return nodes;
+}
+
+int perftDivide(Board& b, int depth)
+{
+    MoveList list;
+    auto end = list.list.begin();
+    end = generateLegals(end, b, b.curSide);
+
+    Bitboard blockers = generateBlockers(b, b.curSide);
+
+    int legalCount = 0;
+    U64 nodes = 0;
+
+    for (auto m = list.list.begin(); m != end; ++m)
+    {
+        if(!isLegal(m, b, b.curSide, blockers))
+        {
+            continue;
+        }
+
+        doMove(b, m);
+        U64 curNodes = perft(b, depth - 1);
+        std::string promo = "";
+        switch (m->getPromoted()) 
+        {
+            case(NONE) : promo = promo; break;
+            case(KNIGHT) : promo = "n"; break;
+            case(QUEEN) : promo = "q"; break;
+            case(BISHOP) : promo = "b"; break;
+            case(ROOK) : promo = "r"; break;
+        }
+        std::cout << SQUARE_NAMES[m->getFrom()] << SQUARE_NAMES[m->getTo()] << promo << ": " << curNodes << "\n";
+        undoMove(b, m);
+        nodes += curNodes;
+    }
+    std::cout << "\nNodes searched: " << nodes << "\n";
+    return nodes;
+}
+int perftDebug(Board& b, int depth)
+{
+    if (depth == 0) {
+        return 1;
+    }
+    
+    MoveList list;
+    auto end = generateLegals(list.list.begin(), b, b.curSide);
+    Bitboard blockers = generateBlockers(b, b.curSide);
+    
+    U64 nodes = 0;
+    
+    for (auto m = list.list.begin(); m != end; ++m) {
+        if (!isLegal(m, b, b.curSide, blockers)) {
+            continue;
+        }
+
+        doMove(b, m);
+        printDebug(b);
+        std::cin.get();
+        
+        nodes += perftDebug(b, depth - 1);
+        
+        undoMove(b, m);
+        printDebug(b);
+        std::cin.get();
+    }
+    
+    return nodes;
+}
+
+void perftDivideDebug(Board& b, int depth)
+{
+    MoveList list;
+    auto end = generateLegals(list.list.begin(), b, b.curSide);
+    Bitboard blockers = generateBlockers(b, b.curSide);
+    
+    for (auto m = list.list.begin(); m != end; ++m) {
+        if (!isLegal(m, b, b.curSide, blockers)) {
+            continue;
+        }
+        
+        // CHANGE THIS CONDITION AS NEEDED
+        if (!m->isEnpassant()) {
+            continue;
+        }
+
+        printDebug(b);
+        std::cin.get();
+        
+        doMove(b, m);
+        printDebug(b);
+        std::cin.get();
+        perftDebug(b, depth - 1);
+        printDebug(b);
+        std::cin.get();
+        undoMove(b, m);
+    }
 }
