@@ -7,6 +7,9 @@
 void doMove(Board &b, ExtdMove* move);
 void undoMove(Board &b, ExtdMove* move);
 
+void updateChecking(Board &b, Piece piece, Square from, Square to);
+
+
 inline void removePiece(Board& b, Side s, Piece piece, Square sq)
 {
     popBit(b.pieceBB[piece], sq);
