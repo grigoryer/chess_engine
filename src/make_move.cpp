@@ -163,6 +163,7 @@ void doMove(Board &b, ExtdMove* move)
     b.historyCount++;
     //increment history
 
+    b.curState.capturedPiece = NONE;
     clearEpsquare(b);
 
     if(move->getCapture() != NONE)
@@ -260,5 +261,5 @@ void undoMove(Board &b, ExtdMove* move)
     //restore to prev state
     b.historyCount--;
     b.curState = b.stateHistory[b.historyCount]; 
-    updateChecking(b, move->getPiece(), move->getTo(), move->getFrom());  // Note: swapped
+    //updateChecking(b, move->getPiece(), move->getTo(), move->getFrom());  // Note: swapped
 }
