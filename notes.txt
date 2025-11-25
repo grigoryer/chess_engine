@@ -1,15 +1,22 @@
-generating attacks 
-    create target + 1;
+Next Steps
 
 
+1. Basic Evaluation -> piece count
 
-pin
+2. Basic Alpha beta prunning with negamax.
+
+---- uci loop potentially? ------
+---- SPRT constructions for tests ---- Save engine 1 as base case
 
 
+3. Move ordering
 
-    assume we are in check
-    how do we know we are in check
-        - Check squares bitboard array
-        - run through each bitboard and see if its empty or not
-        - if not empty we in check.
+4. Quiescence Search -> minimal
 
+5. Opening Book
+
+6. Transposition Table
+
+7. Iterative deepining 
+
+8. Aspiration Window

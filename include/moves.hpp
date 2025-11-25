@@ -1,7 +1,7 @@
 #pragma once
 #include <constants.hpp>
 
-
+class ExtdMove;
 //Move class encoding moves into a single number
 //Info needed: From square, To square, Capture, EnPassant, Castling, Promotion, Double push, Piece type
 
@@ -21,7 +21,6 @@ constexpr U32 CAPT_MASK   = 0x1C0000;  // 3 bits at 18–20
 constexpr U32 DOUBLE_MASK = 0x200000;
 constexpr U32 EP_MASK     = 0x400000;
 constexpr U32 CAST_MASK   = 0x800000;
-
 
 class Move
 {
@@ -56,6 +55,11 @@ public:
                 (promotion << PROM_SHIFT) | (capture << CAPT_SHIFT) |
                 (doublePush << DOUBLE_SHIFT) | (enpassant << EP_SHIFT) |
                 (castle << CASTLE_SHIFT)));
+
+        if(capture != NONE)
+        {
+            score += (PIECE_SCORES[piece] - PIECE_SCORES[capture]);
+        }
     }
 };
 
@@ -68,3 +72,4 @@ public:
 
 
 };
+

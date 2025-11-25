@@ -16,7 +16,6 @@ public:
 
 class Board
 {
-    
 public:
     //bitboards and piece mailbox
     std::array<Bitboard, NUM_PIECES> pieceBB;
