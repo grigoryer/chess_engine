@@ -1,6 +1,7 @@
 #include "constants.hpp"
 #include <debug.hpp>
 #include "moves.hpp"
+#include "position.hpp"
 #include <move_generation.hpp>
 #include <attacks.hpp>
 

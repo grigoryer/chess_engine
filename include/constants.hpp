@@ -72,7 +72,7 @@ enum PieceType : Piece
 };
 
 
-const std::array<int, NUM_PIECES> PIECE_SCORES = {99999, 900, 500, 315, 300, 100};
+const std::array<int, NUM_PIECES> PIECE_SCORES = {0, 900, 500, 315, 300, 100};
 
 enum Sides : Side
 {
