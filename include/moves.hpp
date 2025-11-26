@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <constants.hpp>
 
 class ExtdMove;
@@ -24,7 +25,7 @@ constexpr U32 CAST_MASK   = 0x800000;
 
 class Move
 {
-    U32 data;
+    U32 data = 0;
 
 public:
 
@@ -38,16 +39,20 @@ public:
     inline bool isEnpassant() const    { return data & EP_MASK; }
     inline bool isCastle() const       { return data & CAST_MASK; }
     inline bool isPromoted() const     { return getPromoted() != NONE; }
+    inline bool isMate() const         { return data == 0; }
 
     inline void setData(U32 move) { data = move; }
 };
 
 class ExtdMove : public Move
 {
-    U32 score = 0;
-    
-
 public: 
+
+    U32 score = 0;
+
+
+    void scoreMove();
+
     
     inline void setMove(Square from, Square to, Piece piece, Piece capture = NONE, Piece promotion = NONE,  bool doublePush = false, bool enpassant = false, bool castle = false)
     {
@@ -55,11 +60,6 @@ public:
                 (promotion << PROM_SHIFT) | (capture << CAPT_SHIFT) |
                 (doublePush << DOUBLE_SHIFT) | (enpassant << EP_SHIFT) |
                 (castle << CASTLE_SHIFT)));
-
-        if(capture != NONE)
-        {
-            score += (PIECE_SCORES[piece] - PIECE_SCORES[capture]);
-        }
     }
 };
 
@@ -69,7 +69,4 @@ class MoveList
 public:
 
     std::array<ExtdMove, 256> list;
-
-
 };
-

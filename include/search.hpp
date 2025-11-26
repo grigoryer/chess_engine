@@ -9,7 +9,7 @@
 #include <evaluation.hpp>
 
 
-
+int scoreMoveList(Board& b, MoveList& list, ExtdMove* end);
 
 
 const int NEG_INF = -1e9;
@@ -24,7 +24,7 @@ class Search
     Evaluation eval;
 
     int negaMax(Board& b, int depthLeft, int alpha, int beta, int initialDepth);
-
+    int nextMove(Move& list, int count);
 public:
     ExtdMove* search(Board& b, int depth);
 
