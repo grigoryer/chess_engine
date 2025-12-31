@@ -117,3 +117,16 @@ ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s)
     list = generateMoves<QUIET>(list, b, s);
     return list;
 }
+
+
+ExtdMove* generateQuiescence(ExtdMove* list, Board& b, Side s)
+{
+    auto check = b.isCheck(s);
+    if(check)
+    {
+        return list;
+    }
+
+    list = generateMoves<CAPTURE>(list, b, s);
+    return list;
+}

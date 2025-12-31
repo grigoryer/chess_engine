@@ -257,3 +257,5 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b, Side s)
 
 
 ExtdMove* generateLegals(ExtdMove* list, Board& b, Side s);
+
+ExtdMove* generateQuiescence(ExtdMove* list, Board& b, Side s);

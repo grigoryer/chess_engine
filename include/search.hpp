@@ -5,6 +5,7 @@
 #include <debug.hpp>
 #include <moves.hpp>
 #include <iostream>
+#include <atomic>
 #include <constants.hpp>
 #include <evaluation.hpp>
 
@@ -20,13 +21,16 @@ const int MATE_SCORE = 100000;
 
 class Search
 {
-
     Evaluation eval;
-
     int negaMax(Board& b, int depthLeft, int alpha, int beta, int initialDepth);
     int nextMove(Move& list, int count);
+    int searchQuiescence(Board& b, int depthLeft, int alpha, int beta);
+    int scoreMoveList(Board& b, MoveList& list, ExtdMove* end);
+
 public:
-    ExtdMove* search(Board& b, int depth);
+
+    std::atomic<bool> stopFlag{false};
+    ExtdMove search(Board& b, int depth);
 
 };
 

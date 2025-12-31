@@ -1,3 +1,4 @@
+#include "uci.hpp"
 #include <hash.hpp>
 #include <debug.hpp>
 #include <moves.hpp>
@@ -15,92 +16,19 @@ using std::cout;
 void testMoveAmount(Board& board);
 void playGame();
 void profilePerft();
+void initNameSpaces();
+
+
 
 int main()
 {
-    // Board b(perft_2);
-    // MoveList list;
-    // auto end = generateLegals(list.list.begin(), b, b.curSide);
+    UciEngine game;
+    initNameSpaces();
 
-    // int legalCount = scoreMoveList(b, list, end);
-    // int count = 0;
-    // for (auto m = list.list.begin(); m <  list.list.begin() + legalCount; ++m)
-    // {
-    //     std::cout << "Move: " << SQUARE_NAMES[(int)m->getFrom()]  << SQUARE_NAMES[(int)m->getTo()]
-    //             << " Piece: " << (int) m->getPiece()
-    //             << " Capture: " << (int)m->getCapture()
-    //             << " EP: " << (int)m->isEnpassant()
-    //             << " Promo: " << (int)m->getPromoted()
-    //             << " Castle: " << (int)m->isCastle()
-    //             << "\n";
-    //             count++;
-    // }
-
-
-    // std::cout << "\nCOUNT OF MOVES: " << legalCount << "\n";
-    // std::cout << "\nCOUNT OF MOVES: " << count << "\n\n\n";
-
-    // testMoveAmount(b);
-
-    playGame();
+    game.run();
 }
 
-/*
-Evaluation e;
-    Search engine;
-    Board b(perft_2);
-    MoveList list;  
-    auto end = generateQuiescence(list.list.begin(), b,  b.curSide);
-    Bitboard blockers = generateBlockers(b, b.curSide);
 
-    printDebug(b);
-    for (auto m = list.list.begin(); m != end; ++m)
-    {
-         if(!isLegal(m, b, b.curSide, blockers))
-        {
-            continue;
-        }
-
-        std::cout << "From: " << SQUARE_NAMES[(int)m->getFrom()] 
-                << " To: " << SQUARE_NAMES[(int)m->getTo()]
-                << " Piece: " << (int) m->getPiece()
-                << " Capture: " << (int)m->getCapture()
-                << " EP: " << (int)m->isEnpassant()
-                << " Promo: " << (int)m->getPromoted()
-                << " Castle: " << (int)m->isCastle()
-                << "\n";
-    }
-                */
-
-
-void playGame()
-{
-    Evaluation e;
-    Search engine;
-    Board b(killer_position);
-
-    std::cout << e.evaluateBoard(b);
-    printPieceBoard(b);
-
-    while(true)
-    {
-        auto m = engine.search(b, 7);
-        if(m == nullptr) 
-        {
-            if(b.isCheck(b.curSide)) { cout << "\nMATE\n"; }
-            else {cout << "\nSTALEMATE\n";}
-
-            perftDivide(b, 1);
-            printDebug(b);
-            break;
-        }
-        std::cout << SQUARE_NAMES[m->getFrom()] << SQUARE_NAMES[m->getTo()] << "\n";
-        doMove(b, m);
-
-        std::cout << e.evaluateBoard(b);
-        printDebug(b);
-    }
-}
 
 void profileCheck()
 {
@@ -162,4 +90,12 @@ void testMoveAmount(Board& board)
 
     std::cout << "\nCOUNT OF MOVES: " << legalCount;
 
+}
+
+
+void initNameSpaces()
+{
+    Attacks::initializeAttacks();
+    Between::initializeBetween();
+    ZobristHashing::initializeZobristRandoms();
 }

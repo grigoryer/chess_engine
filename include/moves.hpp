@@ -2,6 +2,19 @@
 #include <array>
 #include <constants.hpp>
 
+inline Square stringToSquare(const std::string& sqStr) 
+{
+    if (sqStr.length() != 2) return Squares::noSquare;
+    
+    U8 file = sqStr[0] - 'a';
+    U8 rank = sqStr[1] - '1';
+    
+    if (file > 7 || rank > 7) return Squares::noSquare;
+    
+    return rank * 8 + file;
+}
+
+
 class ExtdMove;
 //Move class encoding moves into a single number
 //Info needed: From square, To square, Capture, EnPassant, Castling, Promotion, Double push, Piece type
@@ -50,10 +63,8 @@ public:
 
     U32 score = 0;
 
-
     void scoreMove();
 
-    
     inline void setMove(Square from, Square to, Piece piece, Piece capture = NONE, Piece promotion = NONE,  bool doublePush = false, bool enpassant = false, bool castle = false)
     {
         setData((from | (to << TO_SHIFT) | (piece << PIECE_SHIFT) |

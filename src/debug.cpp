@@ -1,4 +1,5 @@
 #include "constants.hpp"
+#include "position.hpp"
 #include <debug.hpp>
 #include <moves.hpp>
 #include <move_generation.hpp>
@@ -62,9 +63,10 @@ void printPieceBoard(Board &b)
     cout << "  a b c d e f g h\n\n";
 }
 
-void printState(State& state)
+void printState(State& state, Board& b)
 {
     std::cout << "\n========== STATE DEBUG ==========\n";
+    std::cout << "Side to move: " << (static_cast<int>(b.curSide) == WHITE ? "WHITE" : "BLACK") << "\n";
     std::cout << "Hash: 0x" << std::hex << state.hash << std::dec << "\n";
     std::cout << "En Passant Square: " << static_cast<int>(state.epSq) << "\n";
     std::cout << "Castling Rights: " << static_cast<int>(state.castlingRights) << "\n";
@@ -77,7 +79,7 @@ void printState(State& state)
 void printDebug(Board& b)
 {
     printPieceBoard(b);
-    printState(b.curState);
+    printState(b.curState, b);
 }
 
 
@@ -148,6 +150,7 @@ int perftDivide(Board& b, int depth)
     std::cout << "\nNodes searched: " << nodes << "\n";
     return nodes;
 }
+
 int perftDebug(Board& b, int depth)
 {
     if (depth == 0) {
