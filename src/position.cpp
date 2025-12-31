@@ -2,6 +2,7 @@
 #include "constants.hpp"
 #include <between.hpp>
 #include "hash.hpp"
+#include <iostream>
 #include <position.hpp>
 #include <debug.hpp>
 #include <sstream>
@@ -125,42 +126,36 @@ void Board::fenParser(const std::string& fen)
     else{ state->full_move = std::stoi(move); }*/
 }
 
-void initNameSpaces()
+
+void resetPieceList(Board& b)
 {
-    Attacks::initializeAttacks();
-    Between::initializeBetween();
-    ZobristHashing::initializeZobristRandoms();
-}
-
-void Board::init()
-{
-
-    initNameSpaces();
-    //set occupancy for all pieces
-    occupancy = sideBB[WHITE] | sideBB[BLACK];
-
-    //fill peice board
-    pieceList.fill(NONE);
+    b.pieceList.fill(NONE);
     for (Piece piece = KING; piece <= PAWN; piece++)
     {
-        Bitboard whitePieceBB = getUniquePiece(WHITE, piece);
+        Bitboard whitePieceBB = b.getUniquePiece(WHITE, piece);
         while (whitePieceBB != 0)
         {
             Square sq = popLsb(whitePieceBB);
-            pieceList[sq] = piece;
+            b.pieceList[sq] = piece;
         }
 
-        Bitboard blackPieceBB = getUniquePiece(BLACK, piece);
+        Bitboard blackPieceBB = b.getUniquePiece(BLACK, piece);
         while (blackPieceBB != 0)
         {
             Square sq = popLsb(blackPieceBB);
-            pieceList[sq] = piece; // k-p
+            b.pieceList[sq] = piece; // k-p
         }
     }
-
+}
+void Board::init()
+{
+    //set occupancy for all pieces
+    occupancy = sideBB[WHITE] | sideBB[BLACK];
+    resetPieceList(*this);
     setChecking(WHITE);
     setChecking(BLACK);
     curState.hash = ZobristHashing::initailizeHash(*this);
+    
 }
 
 Board::Board()
@@ -171,6 +166,16 @@ Board::Board()
 
 Board::Board(const std::string& fen)
 {
+    fenParser(fen);
+    init();
+}
+
+
+void Board::resetBoard(const std::string& fen)
+{
+    historyCount = 0;
+    
+    curState.resetState();
     fenParser(fen);
     init();
 }
@@ -189,4 +194,40 @@ void Board::setChecking(Side s)
 bool Board::isCheck(Side s)
 {
     return (checkingSqs[s] != 0ULL);
+}
+
+bool Board::isDraw()
+{
+    if(curState.halfmoveCount > 99) { return true; }
+
+    auto statePointer = &stateHistory[historyCount];
+
+    int counter = 1;
+    for(int i = historyCount - 1; i >= 0; i--)
+    {
+        if(stateHistory[i].halfmoveCount == 0)
+        {
+            // Hit a position where halfmove was reset (capture/pawn move)
+            // Can't have repetition before this
+            break;
+        }
+        
+        if(stateHistory[i].hash == curState.hash)
+        {
+            counter++;
+            if(counter >= 3) { return true; }
+        }
+    }
+
+    return false;
+}
+
+void State::resetState()
+{
+    Key hash = 0;
+    EpSquare epSq = EpSquare::NONE;
+    Castling castlingRights = Castling::ALL;
+    U16 halfmoveCount = 0;
+    U16 fullmoveCount = 0;
+    Piece capturedPiece = NONE;
 }

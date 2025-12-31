@@ -12,6 +12,8 @@ public:
     U16 halfmoveCount = 0;
     U16 fullmoveCount = 0;
     Piece capturedPiece = NONE;
+
+    void resetState();
 };
 
 class Board
@@ -36,12 +38,14 @@ public:
 
     void fenParser(const std::string& fen);
     void init();
+    void resetBoard(const std::string& fen);
 
     Board();
     Board(const std::string& fen);
 
     void setChecking(Side s);
     bool isCheck(Side s);
+    bool isDraw();
 
     
     inline Bitboard getSide(Side s) const

@@ -7,7 +7,7 @@ void printBoard(Bitboard bitboard);
 
 void printPieceBoard(Board &b);
 
-void printState(State& state);
+void printState(State& state, Board& b);
 
 void printDebug(Board& b);
 

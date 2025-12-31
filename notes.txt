@@ -1,17 +1,16 @@
 Next Steps
 
-
 1. Basic Evaluation -> piece count
 
 2. Basic Alpha beta prunning with negamax.
 
----- uci loop potentially? ------
----- SPRT constructions for tests ---- Save engine 1 as base case
-
-
 3. Move ordering
 
 4. Quiescence Search -> minimal
+
+UCI LOOP AND SPRT COMPLETE //BASE ENGINE HERE
+
+----- current ------
 
 5. Opening Book
 
