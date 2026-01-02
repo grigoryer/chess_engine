@@ -12,10 +12,10 @@ UCI LOOP AND SPRT COMPLETE //BASE ENGINE HERE
 
 ----- current ------
 
-5. Opening Book
+5. Opening Book -- skip
 
-6. Transposition Table
+6. Transposition Table 
 
-7. Iterative deepining 
+7. Iterative deepining  -- DONE
 
 8. Aspiration Window

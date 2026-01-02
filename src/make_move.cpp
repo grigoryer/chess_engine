@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "debug.hpp"
 #include "moves.hpp"
+#include <cassert>
 #include <iostream>
 #include <make_move.hpp>
 
@@ -19,8 +20,9 @@ inline void updateChecking(Board &b, Piece piece, Square from, Square to)
     Square ksq = lsb(b.getUniquePiece(enemy, KING));
 
     //see if piece that move gives direct check
-    b.checkingSqs[enemy] |= (1ULL << to) & Attacks::getPieceAttacksRuntime(pt, ksq, b.occupancy, enemy);
 
+    b.checkingSqs[enemy] |= (1ULL << to) & Attacks::getPieceAttacksRuntime(pt, ksq, b.occupancy, enemy);
+        
     //get allignement for discovred check
     Alignment alligned = Between::getAlignment(ksq, from);
     if(alligned == Alignment::NONE) //if none no need to check
@@ -163,8 +165,10 @@ void doMove(Board &b, ExtdMove* move)
     b.historyCount++;
     //increment history
 
+    assert(to <= h8 && from <= h8);  // Add this
     b.curState.capturedPiece = NONE;
     clearEpsquare(b);
+
 
     if(move->getCapture() != NONE)
     {

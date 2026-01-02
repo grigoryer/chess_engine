@@ -26,12 +26,10 @@ class Search
     int nextMove(Move& list, int count);
     int searchQuiescence(Board& b, int depthLeft, int alpha, int beta);
     int scoreMoveList(Board& b, MoveList& list, ExtdMove* end);
-
 public:
-
     std::atomic<bool> stopFlag{false};
-    ExtdMove search(Board& b, int depth);
-
+    ExtdMove search(Board& b, const int depth);
+    ExtdMove iterativeDeep(Board& b, const int maxDepth);
 };
 
 
