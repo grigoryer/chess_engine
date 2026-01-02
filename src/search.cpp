@@ -5,12 +5,42 @@
 #include <algorithm>
 #include <array>
 #include <search.hpp>
+#include <thread>
 
-int q_depth = 3;
+
+ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
+{
+    ExtdMove bestMove{};
+    ExtdMove tempMove{};
+
+    int depth = 1;
+    auto startTime = std::chrono::steady_clock::now();
+    
+    while(!stopFlag.load() && depth <= maxDepth) 
+    {
+        Board copy = b;
+        tempMove = search(copy, depth);
+        
+        if(stopFlag.load())
+        {
+            break;
+        }
+        
+        bestMove = tempMove;  // Only update if search completed
+        std::cout << "info depth " << depth  << " move " << SQUARE_NAMES[bestMove.getFrom()]
+                << SQUARE_NAMES[bestMove.getTo()] << std::endl;
+
+        depth++;
+        //printDebug(b);
+    }
+    
+    return bestMove;
+}
+
+
 
 // helper function returns best move at depth 1 perfroming negamax on all rest depth nodes 
-
-ExtdMove Search::search(Board& b, int depth)
+ExtdMove Search::search(Board& b, const int depth)
 {
     ExtdMove NULL_MOVE;
     NULL_MOVE.setMove(noSquare, noSquare, KING);
@@ -24,7 +54,7 @@ ExtdMove Search::search(Board& b, int depth)
 
     if(legalCount == 0) { return NULL_MOVE; } //mate or stalemate since no legal moves
 
-    ExtdMove bestMove = end[0];
+    ExtdMove bestMove = NULL_MOVE;
     int bestScore = NEG_INF;
     
     //for each move check if we need check stoppage, then recursivly do move thorugh negamax.
@@ -41,10 +71,12 @@ ExtdMove Search::search(Board& b, int depth)
             bestScore = score;
             bestMove = *m;
         }
-        std::cout << "info move current best"
-                << SQUARE_NAMES[bestMove.getFrom()]
-                << SQUARE_NAMES[bestMove.getTo()] << std::endl;
+        
+        //std::cout << "   info move current " << SQUARE_NAMES[bestMove.getFrom()] << SQUARE_NAMES[bestMove.getTo()] << std::endl;
     }
+
+
+    //std::cout << "  info BEST SCORE: " << bestScore << std::endl;
     return bestMove;
 }
 
@@ -69,6 +101,9 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, int initialDep
 
     for (auto m = list.list.begin(); m < list.list.begin() + legalCount; ++m)
     {
+
+        //std::cout << "      info move current " << SQUARE_NAMES[m->getFrom()] << SQUARE_NAMES[m->getTo()] << " depth " << depthLeft << std::endl;
+
         if(stopFlag.load()) { return bestScore; }
 
         doMove(b, m);

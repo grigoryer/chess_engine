@@ -1,5 +1,8 @@
+#include "debug.hpp"
+#include <cassert>
 #include <constants.hpp>
 #include <attacks.hpp>
+#include <iostream>
 
 
 //Leaper pieces generation

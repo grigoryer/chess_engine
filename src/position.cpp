@@ -174,7 +174,6 @@ Board::Board(const std::string& fen)
 void Board::resetBoard(const std::string& fen)
 {
     historyCount = 0;
-    
     curState.resetState();
     fenParser(fen);
     init();
@@ -224,10 +223,10 @@ bool Board::isDraw()
 
 void State::resetState()
 {
-    Key hash = 0;
-    EpSquare epSq = EpSquare::NONE;
-    Castling castlingRights = Castling::ALL;
-    U16 halfmoveCount = 0;
-    U16 fullmoveCount = 0;
-    Piece capturedPiece = NONE;
+    hash = 0;
+    epSq = EpSquare::NONE;
+    castlingRights = Castling::ALL;
+    halfmoveCount = 0;
+    fullmoveCount = 0;
+    capturedPiece = NONE;
 }

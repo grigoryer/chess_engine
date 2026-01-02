@@ -22,10 +22,15 @@ void initNameSpaces();
 
 int main()
 {
+
+
     UciEngine game;
     initNameSpaces();
 
     game.run();
+
+    //Board board("4brn1/pB3k2/2p2p2/3q3p/8/3N2P1/PPP1PP2/R2Q1R1K w - - 0 1");
+    //testMoveAmount(board);
 }
 
 
