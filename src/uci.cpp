@@ -8,7 +8,6 @@
 #include <sstream>
 #include <thread>
 #include <uci.hpp>
-#include <vector>
 #include <atomic>
 #include <chrono>
 #include <unistd.h>
@@ -218,7 +217,7 @@ void UciEngine::commandWorker()
         
         if (cmd == "uci")
         {
-            std::cout << "id name Medici\n";
+            std::cout << "id name TeaTree\n";
             std::cout << "id author Grigory\n";
             std::cout << "uciok\n";
             std::cout.flush();
@@ -230,6 +229,7 @@ void UciEngine::commandWorker()
         }
         else if (cmd == "ucinewgame")
         {
+            s.tranposTable->resetTable();
             b.resetBoard(STARTING_FEN);
         }
         else if (cmd == "position")

@@ -66,9 +66,13 @@ constexpr Bitboard Rank8BB = Rank1BB << (8 * 7);
 // SEARCH CONSTANTS
 // ============================================================================
 
-const int TTABLE_SIZE = 5000000;
-
-const int q_depth = 3;
+const int TTABLE_SIZE = 1<<22;
+const int QSEARCH_DEPTH = 3;
+const int NEG_INF = -1e9;
+const int POS_INF =  1e9;
+int const MAX = 99999;
+int const MIN = -99999;
+const int MATE = 100000;
 
 
 

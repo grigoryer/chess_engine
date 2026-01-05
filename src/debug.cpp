@@ -78,13 +78,6 @@ void printState(State& state, Board& b)
 
 void printDebug(Board& b)
 {
-    for(int i = 0; i <= KING; i++)
-    {
-        for(int j = 0; j <= BLACK; j++)
-        {
-            printBoard(b.getUniquePiece(j, i));
-        }
-    }
     printPieceBoard(b);
     printState(b.curState, b);
 }

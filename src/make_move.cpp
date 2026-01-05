@@ -1,10 +1,8 @@
 #include "attacks.hpp"
 #include "between.hpp"
 #include "constants.hpp"
-#include "debug.hpp"
 #include "moves.hpp"
 #include <cassert>
-#include <iostream>
 #include <make_move.hpp>
 
 

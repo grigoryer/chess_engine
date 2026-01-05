@@ -124,9 +124,8 @@ ExtdMove* generateQuiescence(ExtdMove* list, Board& b, Side s)
     auto check = b.isCheck(s);
     if(check)
     {
-        return list;
+        return generateMoves<EVASIONS>(list, b, s);
     }
 
-    list = generateMoves<CAPTURE>(list, b, s);
-    return list;
+    return generateMoves<CAPTURE>(list, b, s);
 }
