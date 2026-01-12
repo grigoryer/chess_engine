@@ -18,6 +18,9 @@ class Search
 {
     int nodesSearched = 0;
     int selectedDepthScore = 0;
+
+    int ttHits = 0;
+    int ttAdds = 0;
     Evaluation eval;
     int negaMax(Board& b, int depthLeft, int alpha, int beta, const int& initialDepth);
     int nextMove(Move& list, int count);

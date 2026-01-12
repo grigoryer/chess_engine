@@ -1,5 +1,4 @@
 #include "constants.hpp"
-#include "debug.hpp"
 #include "move_generation.hpp"
 #include "moves.hpp"
 #include "tt.hpp"
@@ -18,8 +17,13 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
     while(!stopFlag.load() && depth <= maxDepth) 
     {
         Board copy = b; // for now copy since getting king disapperaing error TODO: find out why king disapperas in original board state.
-        tempMove = search(copy, depth);
         
+
+        auto iterationStartTime = std::chrono::steady_clock::now();
+        tempMove = search(copy, depth);
+        auto iterationElapsedTime = std::chrono::steady_clock::now() - iterationStartTime;
+        auto iterationElapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(iterationElapsedTime).count();
+
         if(stopFlag.load())
         {
             break;
@@ -30,8 +34,11 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
         // info with depth, nodes searched and score of best position possible
         std::cout << "info depth " << depth  
         << " move " << SQUARE_NAMES[bestMove.getFrom()] << SQUARE_NAMES[bestMove.getTo()] 
-        << " score " << selectedDepthScore 
+        << " cp score " << selectedDepthScore 
         << " nodes " << nodesSearched 
+        << " nps " << (nodesSearched/iterationElapsedMS) << "k"
+        << " TT Adds " << ttAdds 
+        << " TT Hits " << ttHits 
         << std::endl;   
 
         depth++;
@@ -47,6 +54,8 @@ ExtdMove Search::search(Board& b, const int depth)
     //reset searching stats and default move;
     nodesSearched = 0;
     selectedDepthScore = 0;
+    ttAdds = 0;
+    ttHits = 0;
 
     ExtdMove NULL_MOVE;
     NULL_MOVE.setMove(noSquare, noSquare, KING);
@@ -92,21 +101,25 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
     if(b.isDraw()) { return 0; }
 
     // TT probe
-    TTEntry* ttEntry = tranposTable->probeEntry( b.curState.hash);
-    if(ttEntry->hash == b.curState.hash)
+    TTEntry* ttEntry = tranposTable->probeEntry(b.curState.hash);
+
+    if(ttEntry != nullptr && ttEntry->hash == b.curState.hash)
     {
-        if (ttEntry->depth >= depthLeft) 
+        if(ttEntry->depth >= depthLeft) 
         {
             if(ttEntry->type == EXACT)
             {
+                ttHits++;
                 return ttEntry->score;
             }
             else if(ttEntry->type == HIGH && ttEntry->score >= beta)
             {
+                ttHits++;
                 return ttEntry->score;
             }
             else if(ttEntry->type == LOW && ttEntry->score <= alpha)
             {
+                ttHits++;
                 return ttEntry->score;
             }
         }
@@ -146,8 +159,9 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         //alphabeta cutoffs, add ttentry here for beta since it is a cutoff
         if(score >= beta) 
         { 
+            
             nodeType = HIGH;
-            if(!stopFlag.load()) { tranposTable->addEntry(b.curState.hash, depthLeft, score, HIGH, *m); }
+            if(!stopFlag.load()) { ttAdds++; tranposTable->addEntry(b.curState.hash, depthLeft, score, HIGH, *m); }
             return score; 
         }
         if(score > bestScore) 
@@ -164,13 +178,12 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         if(bestScore <= alphaOriginal) { nodeType = LOW; }
         else { nodeType = EXACT; }
 
+        ttAdds++;
         tranposTable->addEntry(b.curState.hash, depthLeft, bestScore, nodeType, bestMove);
     }
 
     return bestScore;
 }
-
-
 
 //DOESNT WORK: TODO, generateQuiescence doesnt work
 int Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
