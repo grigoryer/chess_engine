@@ -88,24 +88,28 @@ enum NodeType : U8
 struct TTEntry
 {
     Key hash = 0ULL;
-    U8 depth = 0;
-    int score = 0;
-    NodeType type = EXACT;
     Move bestMove{};
+    Score score = 0;
+    U8 depth = 0;
+    NodeType type = LOW;
 
     TTEntry();
-    TTEntry(Key hash, U8 depth, int score, NodeType type, Move best_move);
+    TTEntry(Key hash, U8 depth, Score score, NodeType type, Move move);
+};
+
+struct TTBucket
+{
+    std::array<TTEntry, TTABLE_BUCKET_SIZE> bucket;
 };
 
 class TTable
 {
-    std::array<TTEntry, TTABLE_SIZE> table;
+    std::array<TTBucket, TTABLE_SIZE> table;
     size_t count;
     
 public:
     void resetTable();
-    void addEntry(Key hash, U8 depth, int score, NodeType type, Move best_move);
-    void manageCollision(Key hash, U8 depth, Score score, NodeType type, Move move);
+    void addEntry(Key hash, U8 depth, Score score, NodeType type, Move best_move);
     TTEntry* probeEntry(Key hash);
 
 };
