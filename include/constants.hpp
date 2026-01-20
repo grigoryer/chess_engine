@@ -66,15 +66,15 @@ constexpr Bitboard Rank8BB = Rank1BB << (8 * 7);
 // SEARCH CONSTANTS
 // ============================================================================
 
-const int TTABLE_BUCKET_SIZE = 3; //64 bit buckets
+const int TTABLE_BUCKET_SIZE = 1; //64 bit buckets
 
 const int TTABLE_NUM_ENTRIES = 1<<24;
 const int TTABLE_SIZE = TTABLE_NUM_ENTRIES/TTABLE_BUCKET_SIZE;
 
 const int QSEARCH_DEPTH = 3;
 
-const Score NEG_INF = std::numeric_limits<int16_t>::min() + 1;
-const Score POS_INF = std::numeric_limits<int16_t>::max();
+const Score NEG_INF = std::numeric_limits<Score>::min() + 1;
+const Score POS_INF = std::numeric_limits<Score>::max();
 const Score MATE = 30000;
 
 
