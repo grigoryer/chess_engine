@@ -4,6 +4,10 @@
 #include <thread>
 #include "search.hpp"
 #include "constants.hpp"
+#include <queue>               
+#include <condition_variable>   
+#include <mutex>               
+#include <string>               
 
 
 

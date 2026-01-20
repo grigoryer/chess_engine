@@ -12,5 +12,5 @@ add_executable(chess_engine ${SOURCES})
 target_include_directories(chess_engine PRIVATE include)
 
 # More aggressive optimizations
-target_compile_options(chess_engine PRIVATE -O3 -march=native -flto)
+target_compile_options(chess_engine PRIVATE -O3 -march=native)
 #target_compile_options(chess_engine PRIVATE -O0 -g)

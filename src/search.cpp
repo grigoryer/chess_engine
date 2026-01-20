@@ -18,11 +18,7 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
     {
         Board copy = b; // for now copy since getting king disapperaing error TODO: find out why king disapperas in original board state.
         
-
-        auto iterationStartTime = std::chrono::steady_clock::now();
         tempMove = search(copy, depth);
-        auto iterationElapsedTime = std::chrono::steady_clock::now() - iterationStartTime;
-        auto iterationElapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(iterationElapsedTime).count();
 
         if(stopFlag.load())
         {
@@ -36,7 +32,6 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
         << " move " << SQUARE_NAMES[bestMove.getFrom()] << SQUARE_NAMES[bestMove.getTo()] 
         << " cp score " << selectedDepthScore 
         << " nodes " << nodesSearched 
-        << " nps " << (nodesSearched/iterationElapsedMS) << "k"
         << " TT Adds " << ttAdds 
         << " TT Hits " << ttHits 
         << std::endl;   
@@ -51,11 +46,9 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
 // helper function returns best move at depth 1 perfroming negamax on all rest depth nodes 
 ExtdMove Search::search(Board& b, const int depth)
 {
-    //reset searching stats and default move;
+    //reset searching stats and default move
     nodesSearched = 0;
     selectedDepthScore = 0;
-    ttAdds = 0;
-    ttHits = 0;
 
     ExtdMove NULL_MOVE;
     NULL_MOVE.setMove(noSquare, noSquare, KING);
@@ -65,7 +58,7 @@ ExtdMove Search::search(Board& b, const int depth)
     //gen legal moves, then get amount of legal moves and sort them using move ordering MVV LVA
     MoveList list{};
     auto end = generateLegals(list.list.begin(), b, b.curSide);
-    int legalCount = scoreMoveList(b, list, end);
+    int legalCount = scoreMoveList(b, list, end); //returns legal count/scores moves (illegals get pushed to back)/and orders them,
 
     if(legalCount == 0) { return NULL_MOVE; } //mate or stalemate since no legal moves
 
@@ -109,17 +102,14 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         {
             if(ttEntry->type == EXACT)
             {
-                ttHits++;
                 return ttEntry->score;
             }
             else if(ttEntry->type == HIGH && ttEntry->score >= beta)
             {
-                ttHits++;
                 return ttEntry->score;
             }
             else if(ttEntry->type == LOW && ttEntry->score <= alpha)
             {
-                ttHits++;
                 return ttEntry->score;
             }
         }
@@ -141,7 +131,7 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
     ExtdMove bestMove{};
     Key startHash = b.curState.hash;
     
-    int alphaOriginal = alpha;
+    int alphaOriginal = alpha; //store for tt entry
     NodeType nodeType{};
 
     for (auto m = list.list.begin(); m < list.list.begin() + legalCount; ++m)
@@ -159,7 +149,6 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         //alphabeta cutoffs, add ttentry here for beta since it is a cutoff
         if(score >= beta) 
         { 
-            
             nodeType = HIGH;
             if(!stopFlag.load()) { ttAdds++; tranposTable->addEntry(b.curState.hash, depthLeft, score, HIGH, *m); }
             return score; 
@@ -177,8 +166,7 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
     {
         if(bestScore <= alphaOriginal) { nodeType = LOW; }
         else { nodeType = EXACT; }
-
-        ttAdds++;
+        
         tranposTable->addEntry(b.curState.hash, depthLeft, bestScore, nodeType, bestMove);
     }
 
