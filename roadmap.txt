@@ -23,3 +23,7 @@ UCI LOOP AND SPRT COMPLETE //BASE ENGINE HERE
 9. Aspiration Window
 
 10. PV Variation
+
+
+
+./fastchess/fastchess -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 -recover -concurrency 1  -engine cmd=./versions/tt_mo_stats  name=mo  -engine cmd=./versions/tt_plain_clean name=tt -each tc=10+0.5 -openings file=opening_book.pgn format=pgn order="random" -rounds 1000 -repeat -log file=./docs/mo_logs.txt append=true compress=false realtime=true engine=true
