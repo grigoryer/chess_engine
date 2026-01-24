@@ -11,10 +11,16 @@ TTEntry::TTEntry(Key hash, U8 depth, Score score, NodeType type, Move move)
 : hash(hash), depth(depth), score(score), type(type), bestMove(move)
 {  }
 
-//Using buckets, add to the first empty bucket entry, if same hash replace with higher depth, and if all fild and a new hash comes we replace lowest depth.
+
+//replace if new depth is greater
 void TTable::addEntry(Key hash, U8 depth, Score score, NodeType type, Move move)
 {
-    table.at(hash % TTABLE_SIZE) = {hash,depth,score,type,move};
+    int index = hash % TTABLE_SIZE;
+
+    //if(table.at(index).depth < depth)
+    {
+        table.at(index) = {hash,depth,score,type,move};   
+    }
 }
 
 TTEntry* TTable::probeEntry(Key hash)
@@ -27,7 +33,6 @@ TTEntry* TTable::probeEntry(Key hash)
 
     return nullptr;
 }
-
 
 void TTable::resetTable()
 {

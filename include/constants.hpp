@@ -17,6 +17,7 @@ using Key      = U64;
 using Square   = int8_t;
 using Side     = int8_t;
 using Piece    = int8_t;
+
 using Score    = int16_t;
 
 // ============================================================================
