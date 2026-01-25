@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <position.hpp>
 #include <move_generation.hpp>
 #include <make_move.hpp>
@@ -101,8 +102,7 @@ struct TTEntry
 
 class TTable
 {
-    std::array<TTEntry, TTABLE_NUM_ENTRIES> table;
-    size_t count;
+    std::array<std::array<TTEntry, TTABLE_BUCKET_SIZE>, TTABLE_SIZE> table;
     
 public:
     void resetTable();
