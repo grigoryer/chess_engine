@@ -88,7 +88,10 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
 {
     // update node and check if stop flag active, since we havent completed it we return neg_inf to discard the search
     nodesSearched++;
-    if (stopFlag.load()) { return NEG_INF; } // stop flag check TODO: not check each time but every modulus operator
+    if (((nodesSearched & 2047) == 0) && stopFlag.load()) // check every 2048 nodes
+    {
+        return NEG_INF;
+    }
 
     if (b.isDraw()) { return 0; }
 
@@ -118,7 +121,7 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         }
     }
     
-    if (depthLeft == 0) { return (b.curSide == WHITE ? eval.evaluateBoard(b) : -eval.evaluateBoard(b)); } //change to Q-search
+    if (depthLeft == 0) { return searchQuiescence(b, QSEARCH_DEPTH, alpha, beta); } //change to Q-search
 
     MoveList list{};
     auto end = generateLegals(list.list.begin(), b, b.curSide);
@@ -190,7 +193,7 @@ int Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
     nodesSearched++;
     int bestValue = (b.curSide == WHITE ? eval.evaluateBoard(b) : -eval.evaluateBoard(b));
 
-    if (depthLeft == 0 || stopFlag.load()) { return bestValue; }
+    if (depthLeft == 0 || ((nodesSearched & 2047) == 0 && stopFlag.load())) { return bestValue; }
 
     if (bestValue >= beta) { return bestValue; }
     if (bestValue > alpha) { alpha = bestValue; }

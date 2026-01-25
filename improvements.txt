@@ -53,25 +53,34 @@ ttable plain ---
 	--------------------------------------------------
 
 
-ttable buckets  ---
-    Search Features: AB prunning, MVV_LVA, transposition table (bucket per index with size 3), 
+ttable improvements  ---
+    Search Features: AB prunning, MVV_LVA, transposition table 
 	Eval Features: Piece difference, Piece position
 
-	APPROX ELO: 1770-1820
 
-    BUCKET SIZE - 1
-		
-
-    BUCKET SIZE - 2
-
-
-    BUCKET SIZE - 3
-
-
-    BUCKET SIZE - 4
-
-
-    BUCKET SIZE - 5
+	move ordering using stored best move
+	--------------------------------------------------
+	Results of mo vs tt (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 82.40 +/- 19.87, nElo: 106.75 +/- 24.77
+	LOS: 100.00 %, DrawRatio: 34.92 %, PairsRatio: 2.84
+	Games: 756, Wins: 355, Losses: 179, Draws: 222, Points: 466.0 (61.64 %)
+	Ptnml(0-2): [16, 48, 132, 108, 74], WL/DD Ratio: 3.00
+	LLR: 2.97 (100.7%) (-2.94, 2.94) [0.00, 5.00]
+	--------------------------------------------------
+	SPRT ([0.00, 5.00]) completed - H1 was accepted
 
 
-    BUCKET SIZE - 6
+
+
+
+qsearch max depth 3 ---
+	Search Features: AB prunning, MVV_LVA, transposition table (dep replace and move ordering), qsearch
+	Eval Features: Piece difference, Piece position
+	--------------------------------------------------
+	Results of qs vs dep (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 182.88 +/- 42.25, nElo: 234.23 +/- 44.90
+	LOS: 100.00 %, DrawRatio: 21.74 %, PairsRatio: 10.25
+	Games: 230, Wins: 137, Losses: 26, Draws: 67, Points: 170.5 (74.13 %)
+	Ptnml(0-2): [4, 4, 25, 41, 41], WL/DD Ratio: 1.27
+	LLR: 2.96 (100.4%) (-2.94, 2.94) [0.00, 10.00]
+	--------------------------------------------------

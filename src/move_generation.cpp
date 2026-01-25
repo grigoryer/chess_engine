@@ -127,5 +127,7 @@ ExtdMove* generateQuiescence(ExtdMove* list, Board& b, Side s)
         return generateMoves<EVASIONS>(list, b, s);
     }
 
-    return generateMoves<CAPTURE>(list, b, s);
+    list = generateMoves<CAPTURE>(list, b, s);
+
+    return list;
 }
