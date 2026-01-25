@@ -191,6 +191,8 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
 int Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
 {
     nodesSearched++;
+    
+    //probe tt for 
     int bestValue = (b.curSide == WHITE ? eval.evaluateBoard(b) : -eval.evaluateBoard(b));
 
     if (depthLeft == 0 || ((nodesSearched & 2047) == 0 && stopFlag.load())) { return bestValue; }
