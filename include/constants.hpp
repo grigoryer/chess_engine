@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <limits>
 
 // ============================================================================
 // TYPE ALIASES
