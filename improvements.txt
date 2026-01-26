@@ -70,6 +70,15 @@ ttable improvements  ---
 	SPRT ([0.00, 5.00]) completed - H1 was accepted
 
 
+	bucket implemntation --- no significant improvement but i will keep it.
+	--------------------------------------------------
+	Results of bucket vs qs (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 0.33 +/- 10.34, nElo: 0.66 +/- 20.92
+	LOS: 52.48 %, DrawRatio: 66.98 %, PairsRatio: 1.08
+	Games: 1060, Wins: 328, Losses: 327, Draws: 405, Points: 530.5 (50.05 %)
+	Ptnml(0-2): [17, 67, 355, 80, 11], WL/DD Ratio: 1.75
+	LLR: -0.38 (-12.9%) (-2.94, 2.94) [0.00, 10.00]
+	--------------------------------------------------
 
 
 

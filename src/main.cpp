@@ -1,6 +1,8 @@
+#include "attacks.hpp"
 #include "uci.hpp"
 #include <hash.hpp>
 #include <debug.hpp>
+#include <iostream>
 #include <moves.hpp>
 #include <constants.hpp>
 #include <position.hpp>
