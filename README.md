@@ -1,4 +1,4 @@
-# TeaTree Chess Engine
+# GreenTeaTree Chess Engine
 
 A UCI-compliant chess engine written in C++ featuring bitboard representation, magic bitboards, and advanced search algorithms. The engine achieves approximately **1700 ELO** on Lichess and demonstrates strong tactical play through iterative deepening and transposition tables.
 
