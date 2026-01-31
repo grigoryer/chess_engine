@@ -11,6 +11,7 @@ public:
     Castling castlingRights = Castling::ALL;
     U16 halfmoveCount = 0;
     U16 fullmoveCount = 0;
+    U8 phaseScore = 0;
     Piece capturedPiece = NONE;
 
     void resetState();

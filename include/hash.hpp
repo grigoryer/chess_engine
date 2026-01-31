@@ -1,6 +1,7 @@
 #pragma once
 #include "constants.hpp"
 #include "position.hpp"
+#include <ctime>
 
 namespace ZobristHashing
 {

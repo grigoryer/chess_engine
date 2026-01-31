@@ -1,6 +1,7 @@
 #include "attacks.hpp"
 #include "constants.hpp"
 #include <between.hpp>
+#include "evaluation.hpp"
 #include "hash.hpp"
 #include <iostream>
 #include <position.hpp>
@@ -137,6 +138,7 @@ void resetPieceList(Board& b)
         {
             Square sq = popLsb(whitePieceBB);
             b.pieceList[sq] = piece;
+            b.curState.phaseScore += PHASE_PIECE_VALUES[piece];
         }
 
         Bitboard blackPieceBB = b.getUniquePiece(BLACK, piece);
@@ -144,9 +146,11 @@ void resetPieceList(Board& b)
         {
             Square sq = popLsb(blackPieceBB);
             b.pieceList[sq] = piece; // k-p
+            b.curState.phaseScore += PHASE_PIECE_VALUES[piece];
         }
     }
 }
+
 void Board::init()
 {
     //set occupancy for all pieces
@@ -229,4 +233,5 @@ void State::resetState()
     halfmoveCount = 0;
     fullmoveCount = 0;
     capturedPiece = NONE;
+    phaseScore = 0;
 }

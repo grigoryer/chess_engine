@@ -173,6 +173,7 @@ void doMove(Board &b, ExtdMove* move)
         Piece captured = move->getCapture();
         removePiece(b, enemy, captured, to);
         b.curState.capturedPiece = captured;
+        b.curState.phaseScore -= PHASE_PIECE_VALUES[captured];
     }
 
     if(move->isEnpassant())
@@ -180,6 +181,7 @@ void doMove(Board &b, ExtdMove* move)
         Square capturedSq = squareToEPCaptureSquare(to, s);
         removePiece(b, enemy, PAWN, capturedSq);
         updateCheckingEnpassant(b, capturedSq, s);
+        b.curState.phaseScore -= PHASE_PIECE_VALUES[PAWN];
     }
     else if(move->isDouble())
     {

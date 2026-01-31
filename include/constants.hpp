@@ -80,6 +80,17 @@ const Score POS_INF = std::numeric_limits<Score>::max();
 const Score MATE = 30000;
 
 
+
+// ============================================================================
+// EVAL CONSTANTS
+// ============================================================================
+
+
+const std::array<int, NUM_PIECES> PHASE_PIECE_VALUES = {0, 4, 2, 2, 2, 1};
+const std::array<int, NUM_PIECES> PIECE_SCORES = {0, 900, 500, 315, 300, 100};
+
+constexpr int LATEGAME_PHASE = 15;    
+
 // ============================================================================
 // ENUMERATIONS
 // ============================================================================
@@ -90,8 +101,6 @@ enum PieceType : Piece
     KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NONE
 };
 
-
-const std::array<int, NUM_PIECES> PIECE_SCORES = {0, 900, 500, 315, 300, 100};
 
 enum Sides : Side
 {
