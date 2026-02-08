@@ -46,3 +46,5 @@ zprofile/
 CMakeLists.txt
 profile.sh
 .vscode/
+.DS_Store
+.clang-tidy
