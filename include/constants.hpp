@@ -32,7 +32,6 @@ constexpr int NUM_FILES      = 8;
 constexpr int NUM_PIECES     = 6;
 constexpr int NUM_CASTLING   = 16;
 constexpr int NUM_EPSQUARES  = 17;
-constexpr int NUM__TYPE_SLIDERS = 2;
 
 constexpr int MAX_MOVES      = 128;
 constexpr int MAX_HISTORY    = 512;
@@ -87,7 +86,7 @@ const Score MATE = 30000;
 
 
 const std::array<int, NUM_PIECES> PHASE_PIECE_VALUES = {0, 4, 2, 2, 2, 1};
-const std::array<int, NUM_PIECES> PIECE_SCORES = {0, 900, 500, 315, 300, 100};
+const std::array<Score, NUM_PIECES> PIECE_SCORES = {0, 900, 500, 315, 300, 100};
 
 constexpr int LATEGAME_PHASE = 15;    
 
@@ -144,7 +143,7 @@ enum Direction : int8_t
     NORTH_WEST = NORTH + WEST
 };
 
-enum MoveType 
+enum MoveType : uint8_t
 {
     QUIET, CAPTURE, LEGAL, EVASIONS
 };
@@ -162,7 +161,7 @@ enum class Castling : U8
 };
 
 
-enum class Alignment
+enum class Alignment : uint8_t
 {
     NONE,
     STRAIGHT,
@@ -293,9 +292,12 @@ inline U8 squareFile(Square sq)
 inline Square epsquareToSquare(EpSquare epSq) 
 {
     if (epSq == EpSquare::NONE) return static_cast<Square>(Squares::noSquare);
-    if (static_cast<int>(epSq) < 8) {
+
+    if (epSq < EpSquare::BA) 
+    {
         return static_cast<Square>(Squares::a3) + static_cast<int>(epSq);
     }
+
     return static_cast<Square>(Squares::a6) + (static_cast<int>(epSq) - 8);
 }
 
@@ -303,10 +305,13 @@ inline Square epsquareToSquare(EpSquare epSq)
 inline Square epsquareToCaptureSquare(EpSquare epSq) 
 {
     if (epSq == EpSquare::NONE) return static_cast<Square>(Squares::noSquare);
-    if (static_cast<int>(epSq) < 8) {
-        return static_cast<Square>(Squares::a4) + static_cast<int>(epSq);
+
+    if (epSq < EpSquare::BA) 
+    {
+        return static_cast<Square>(Squares::a4 + static_cast<int>(epSq));
     }
-    return static_cast<Square>(Squares::a5) + (static_cast<int>(epSq) - 8);
+
+    return static_cast<Square>(Squares::a5 + (static_cast<int>(epSq) - 8));
 }
 
 //convert

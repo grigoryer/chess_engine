@@ -5,10 +5,10 @@
 //all arrays are from own sides perspective so for uneven
 constexpr Square flipSquare(Square sq)
 {
-    return sq ^ 56;
+    return static_cast<Square>(sq ^ 56);
 }
 
-inline int Evaluation::scorePosition(Piece piece, Square sq, bool isLateGame)
+inline Score Evaluation::scorePosition(Piece piece, Square sq, bool isLateGame)
 {
     sq = flipSquare(sq);
 
@@ -20,15 +20,15 @@ inline int Evaluation::scorePosition(Piece piece, Square sq, bool isLateGame)
         case(QUEEN) : { return QUEEN_EVAL_MAP[sq]; }
         case(KNIGHT) : { return KNIGHT_EVAL_MAP[sq]; }
         case(BISHOP) : { return BISHOP_EVAL_MAP[sq]; }
+        default : {  }
     }
     return 0;
 }
 
-int Evaluation::evaluateBoard(Board& b)
+Score Evaluation::evaluateBoard(Board& b)
 {
-    int pieceScore = 0;
-    int positionScore = 0;
-    int phaseScore = 0;
+    Score pieceScore = 0;
+    Score positionScore = 0;
     
     // calculate material first
     for (Piece piece = QUEEN; piece <= PAWN; piece++)

@@ -18,13 +18,10 @@ class Search
 {
     int nodesSearched = 0;
     int selectedDepthScore = 0;
-
-    int ttHits = 0;
-    int ttProbes = 0;
     
     Evaluation eval;
-    int negaMax(Board& b, int depthLeft, int alpha, int beta, const int& initialDepth);
-    int searchQuiescence(Board& b, int depthLeft, int alpha, int beta);
+    Score negaMax(Board& b, int depthLeft, int alpha, int beta, const int& initialDepth);
+    Score searchQuiescence(Board& b, int depthLeft, int alpha, int beta);
     int scoreMoveList(Board& b, MoveList& list, ExtdMove* end);
 
 public:

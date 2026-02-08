@@ -19,7 +19,7 @@ void printBoard(Bitboard bitboard)
         cout << rank + 1 << " "; 
         for (int file = 0; file < NUM_FILES; ++file)
         {
-            Square square = rank * 8 + file;
+            Square square = (rank * 8) + file;
             char c = getBit(bitboard, square) ? '1' : '.';
             cout << c << ' ';
         }
@@ -97,7 +97,6 @@ int perft(Board& b, int depth)
 
     Bitboard blockers = generateBlockers(b, b.curSide);
 
-    int legalCount = 0;
     U64 nodes = 0;
 
     for (auto m = list.list.begin(); m != end; ++m)
@@ -114,7 +113,7 @@ int perft(Board& b, int depth)
     return nodes;
 }
 
-int perftDivide(Board& b, int depth)
+U64 perftDivide(Board& b, int depth)
 {
     MoveList list;
     auto end = list.list.begin();
@@ -122,7 +121,6 @@ int perftDivide(Board& b, int depth)
 
     Bitboard blockers = generateBlockers(b, b.curSide);
 
-    int legalCount = 0;
     U64 nodes = 0;
 
     for (auto m = list.list.begin(); m != end; ++m)

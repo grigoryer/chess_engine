@@ -11,7 +11,7 @@ inline Square stringToSquare(const std::string& sqStr)
     
     if (file > 7 || rank > 7) return Squares::noSquare;
     
-    return rank * 8 + file;
+    return static_cast<Square>((rank * 8) + file);
 }
 
 
@@ -42,17 +42,17 @@ class Move
 
 public:
 
-    inline Square getFrom() const      { return data & FROM_MASK; }
-    inline Square getTo() const        { return (data & TO_MASK) >> TO_SHIFT; }
-    inline Piece getPiece() const      { return (data & PIECE_MASK) >> PIECE_SHIFT; }
-    inline Piece getPromoted() const   { return (data & PROM_MASK) >> PROM_SHIFT; }
-    inline Piece getCapture() const    { return (data & CAPT_MASK) >> CAPT_SHIFT; }
+    [[nodiscard]] inline Square getFrom() const      { return data & FROM_MASK; }
+    [[nodiscard]] inline Square getTo() const        { return (data & TO_MASK) >> TO_SHIFT; }
+    [[nodiscard]] inline Piece getPiece() const      { return (data & PIECE_MASK) >> PIECE_SHIFT; }
+    [[nodiscard]] inline Piece getPromoted() const   { return (data & PROM_MASK) >> PROM_SHIFT; }
+    [[nodiscard]] inline Piece getCapture() const    { return (data & CAPT_MASK) >> CAPT_SHIFT; }
 
-    inline bool isDouble() const       { return data & DOUBLE_MASK; }
-    inline bool isEnpassant() const    { return data & EP_MASK; }
-    inline bool isCastle() const       { return data & CAST_MASK; }
-    inline bool isPromoted() const     { return getPromoted() != NONE; }
-    inline bool isMate() const         { return data == 0; }
+    [[nodiscard]] inline bool isDouble() const       { return data & DOUBLE_MASK; }
+    [[nodiscard]] inline bool isEnpassant() const    { return data & EP_MASK; }
+    [[nodiscard]] inline bool isCastle() const       { return data & CAST_MASK; }
+    [[nodiscard]] inline bool isPromoted() const     { return getPromoted() != NONE; }
+    [[nodiscard]] inline bool isMate() const         { return data == 0; }
 
     inline void setData(U32 move) { data = move; }
 };

@@ -49,12 +49,12 @@ public:
     bool isDraw();
 
     
-    inline Bitboard getSide(Side s) const
+    [[nodiscard]] inline Bitboard getSide(Side s) const
     {
         return sideBB[s];
     }
 
-    inline Bitboard getUniquePiece(Side s, Piece p) const
+    [[nodiscard]] inline Bitboard getUniquePiece(Side s, Piece p) const
     {
         return pieceBB[p] & sideBB[s];
     }

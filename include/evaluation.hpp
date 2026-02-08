@@ -3,7 +3,7 @@
 #include <constants.hpp>
 
 
-const std::array<int, 64> KING_LATE_EVAL_MAP =
+const std::array<Score, 64> KING_LATE_EVAL_MAP =
 {
 -15,  -5, -5, -5, -5, -5,  -5,  -15,
 -5, 0, 5, 5, 5, 5, 0, -5,
@@ -15,7 +15,7 @@ const std::array<int, 64> KING_LATE_EVAL_MAP =
 -5,  -5, -5, -5, -5, -5,  -5, -5
 };
 
-const std::array<int, NUM_SQUARES> ROOK_EVAL_MAP = {
+const std::array<Score, NUM_SQUARES> ROOK_EVAL_MAP = {
   0,  0,  0,  0,  0,  0,  0,  0,
   15,  15, 15, 15, 15, 15,  15,  15,
   0,  0, 15, 15, 15, 15,  0,  0,
@@ -26,7 +26,7 @@ const std::array<int, NUM_SQUARES> ROOK_EVAL_MAP = {
   0,  0, 15, 15, 15, 15,  0,  0
 };
 
-const std::array<int, NUM_SQUARES> BISHOP_EVAL_MAP = {
+const std::array<Score, NUM_SQUARES> BISHOP_EVAL_MAP = {
  -15,  0,  0, 15, 15,  0,  0, -15,
    0, 15, 15, 30, 30, 15, 15,  0,
    0, 15, 30, 30, 30, 30, 15,  0,
@@ -37,7 +37,7 @@ const std::array<int, NUM_SQUARES> BISHOP_EVAL_MAP = {
  -15,  0,  0, 15, 15,  0,  0, -15
 };
 
-const std::array<int, NUM_SQUARES> KNIGHT_EVAL_MAP = {
+const std::array<Score, NUM_SQUARES> KNIGHT_EVAL_MAP = {
  -30, -15,  -5,  -5,  -5,  -5, -15, -30,
  -15,   0, 15, 15, 15, 15,   0, -15,
    -10,  15, 30, 30, 30, 30,  15,   -10,
@@ -48,7 +48,7 @@ const std::array<int, NUM_SQUARES> KNIGHT_EVAL_MAP = {
  -30, -15,  -5,  -5, -5, -5, -5, -30
 };
 
-const std::array<int, 64> PAWN_EVAL_MAP = {
+const std::array<Score, 64> PAWN_EVAL_MAP = {
   0,  0,  0,  0,  0,  0,  0,  0,   // rank 1
   5,  5,  5,  5,  5,  5,  5,  5,   // rank 2
  10, 10, 30, 40, 40, 30, 10, 10,
@@ -59,7 +59,7 @@ const std::array<int, 64> PAWN_EVAL_MAP = {
  35, 35, 35, 35, 35, 35, 35, 35    // rank 8
 };
 
-const std::array<int, NUM_SQUARES> QUEEN_EVAL_MAP = {
+const std::array<Score, NUM_SQUARES> QUEEN_EVAL_MAP = {
    0,  0, 15, 15, 15, 15,  0,  0,
    0, 15, 30, 30, 30, 30, 15,  0,
   15, 30, 45, 45, 45, 45, 30, 15,
@@ -70,7 +70,7 @@ const std::array<int, NUM_SQUARES> QUEEN_EVAL_MAP = {
    0,  0, 15, 15, 15, 15,  0,  0
 };
 
-const std::array<int, 64> KING_EVAL_MAP = {
+const std::array<Score, 64> KING_EVAL_MAP = {
    10,  35,  10,   0,   0,  10,  35,  10,   // rank 1
    0,  0,   0,   0,   0,   0,  0,  0,   // rank 2
     0,   0, -20, -30, -30, -20,   0,   0,   // rank 3
@@ -83,8 +83,7 @@ const std::array<int, 64> KING_EVAL_MAP = {
 
 class Evaluation
 {
-	int scorePosition(Piece piece, Square sq, bool isLateGame);
-	int pawnEvalFile(Board& b, U8 file, Side side, Bitboard pawns, Bitboard pawnsEnemy);
+	Score scorePosition(Piece piece, Square sq, bool isLateGame);
 public: 
-	int evaluateBoard(Board& b);
+	Score evaluateBoard(Board& b);
 };

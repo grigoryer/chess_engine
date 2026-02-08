@@ -112,7 +112,7 @@ quit                  # Exit engine
 ### Play on Lichess
 
 The engine runs as a bot on Lichess:
-**[Challenge TeaTreeBot](https://lichess.org/@/TeaTreeBot)**
+**[Challenge GreenTeaTree](https://lichess.org/@/GreenTeaTree)**
 
 ### Integration with GUI
 

@@ -109,22 +109,30 @@ inline void castlingMoveHelper(Board& b, Side s, Square kingTo, Square& checkTo)
     
     //switch statement depednds which and where the rook moves
     switch (kingTo) {
-        case g1:  // White kingside
+        case g1: // White kingside
+        { 
             rookFrom = h1;
             rookTo = f1;
             break;
+        }
         case c1:  // White queenside
+        {
             rookFrom = a1;
             rookTo = d1;
             break;
+        }
         case g8:  // Black kingside
+        {
             rookFrom = h8;
             rookTo = f8;
             break;
+        }
         case c8:  // Black queenside
+        {
             rookFrom = a8;
             rookTo = d8;
             break;
+        }
     }
     
     //update permissions and move rook.

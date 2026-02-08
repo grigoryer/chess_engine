@@ -4,7 +4,7 @@
 #include <cstring>
 
 TTEntry::TTEntry() 
-: hash(0), depth(0), score(NEG_INF), type(LOW), bestMove()
+: score(NEG_INF), bestMove()
 {  }
 
 TTEntry::TTEntry(Key hash, U8 depth, Score score, NodeType type, Move move) 

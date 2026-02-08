@@ -1,0 +1,95 @@
+Testing SPRT against previous engine iteration. Each version has to be stable and complete an SPRT
+With a successful alternative hypothesis of 10 elo.
+
+https://www.chessprogramming.org/Sequential_Probability_Ratio_Test
+
+base --- 
+	Search Features: AB prunning, MVV-LVA, simple qsearch of max depth 3(BROKEN), search depth 7.
+	Eval Features: Piece difference
+
+	APPROX ELO: 980–1050 
+	--------------------------------------------------
+	Results of MediciBase vs Stockfish (1310 ELO) (20+0.5, NULL - 1t, NULL - 16MB, 8moves_v3.pgn):
+	Elo: -299.97 +/- 39.80, nElo: -365.77 +/- 30.45
+	LOS: 0.00 %, DrawRatio: 24.80 %, PairsRatio: 0.02
+	Games: 500, Wins: 68, Losses: 417, Draws: 15, Points: 75.5 (15.10 %)
+	Ptnml(0-2): [171, 13, 62, 2, 2], WL/DD Ratio: inf
+	--------------------------------------------------
+
+	
+iterative_deep ---
+	Search Features: AB prunning, MVV_LVA, simple qsearch(BROKEN), 
+	Eval Features: Piece difference
+
+	APPROX ELO: 1460-1510
+	-------------------------------------------------- 
+	Results of TeaTree vs Stockfish (20+0.6, NULL - 1t, NULL - 16MB, 8moves_v3.pgn): 
+	Elo: 138.99 +/- 31.13, nElo: 151.52 +/- 30.45 
+	LOS: 100.00 %, DrawRatio: 41.60 %, PairsRatio: 5.35 
+	Games: 500, Wins: 334, Losses: 144, Draws: 22, Points: 345.0 (69.00 %) 
+	Ptnml(0-2): [18, 5, 104, 15, 108], WL/DD Ratio: 103.00 
+	--------------------------------------------------
+
+position_eval --- DIDNT SAVE SPRT
+
+    Search Features: AB prunning, MVV_LVA, [REMOVED BROKEN Q_SEARCH]
+	Eval Features: Piece difference, Piece position
+
+	APPROX ELO: 1690-1730
+
+
+ttable plain ---
+	Search Features: AB prunning, MVV_LVA, transposition table (always replace), 
+	Eval Features: Piece difference, Piece position
+
+	APPROX ELO: 1770-1820
+	--------------------------------------------------
+	Results of TT vs EVAL (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 65.83 +/- 25.49, nElo: 81.86 +/- 30.89
+	LOS: 100.00 %, DrawRatio: 32.51 %, PairsRatio: 2.09
+	Games: 486, Wins: 209, Losses: 118, Draws: 159, Points: 288.5 (59.36 %)
+	Ptnml(0-2): [13, 40, 79, 65, 46], WL/DD Ratio: 1.93
+	LLR: 2.95 (100.0%) (-2.94, 2.94) [0.00, 10.00]
+	--------------------------------------------------
+
+
+ttable improvements  ---
+    Search Features: AB prunning, MVV_LVA, transposition table 
+	Eval Features: Piece difference, Piece position
+
+
+	move ordering using stored best move
+	--------------------------------------------------
+	Results of mo vs tt (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 82.40 +/- 19.87, nElo: 106.75 +/- 24.77
+	LOS: 100.00 %, DrawRatio: 34.92 %, PairsRatio: 2.84
+	Games: 756, Wins: 355, Losses: 179, Draws: 222, Points: 466.0 (61.64 %)
+	Ptnml(0-2): [16, 48, 132, 108, 74], WL/DD Ratio: 3.00
+	LLR: 2.97 (100.7%) (-2.94, 2.94) [0.00, 5.00]
+	--------------------------------------------------
+	SPRT ([0.00, 5.00]) completed - H1 was accepted
+
+
+	bucket implemntation --- no significant improvement but i will keep it.
+	--------------------------------------------------
+	Results of bucket vs qs (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 0.33 +/- 10.34, nElo: 0.66 +/- 20.92
+	LOS: 52.48 %, DrawRatio: 66.98 %, PairsRatio: 1.08
+	Games: 1060, Wins: 328, Losses: 327, Draws: 405, Points: 530.5 (50.05 %)
+	Ptnml(0-2): [17, 67, 355, 80, 11], WL/DD Ratio: 1.75
+	LLR: -0.38 (-12.9%) (-2.94, 2.94) [0.00, 10.00]
+	--------------------------------------------------
+
+
+
+qsearch max depth 3 ---
+	Search Features: AB prunning, MVV_LVA, transposition table (dep replace and move ordering), qsearch
+	Eval Features: Piece difference, Piece position
+	--------------------------------------------------
+	Results of qs vs dep (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 182.88 +/- 42.25, nElo: 234.23 +/- 44.90
+	LOS: 100.00 %, DrawRatio: 21.74 %, PairsRatio: 10.25
+	Games: 230, Wins: 137, Losses: 26, Draws: 67, Points: 170.5 (74.13 %)
+	Ptnml(0-2): [4, 4, 25, 41, 41], WL/DD Ratio: 1.27
+	LLR: 2.96 (100.4%) (-2.94, 2.94) [0.00, 10.00]
+	--------------------------------------------------

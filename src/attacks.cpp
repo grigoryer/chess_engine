@@ -3,75 +3,78 @@
 #include <attacks.hpp>
 
 
-//Leaper pieces generation
-Bitboard genPawnAttacks(Side side, Square sq)
+namespace 
 {
-    Bitboard attacks = 0ULL;
-    Bitboard bb = 0ULL;
-
-    setBit(bb, sq);
-
-    if(side == WHITE)
+//Leaper pieces generation
+    Bitboard genPawnAttacks(Side side, Square sq)
     {
-        // white pawn attacks
+        Bitboard attacks = 0ULL;
+        Bitboard bb = 0ULL;
+
+        setBit(bb, sq);
+
+        if(side == WHITE)
+        {
+            // white pawn attacks
+            attacks |= shift<NORTH_WEST>(bb);
+            attacks |= shift<NORTH_EAST>(bb);
+        }
+        else 
+        {
+            // black pawns attacks
+            attacks |= shift<SOUTH_WEST>(bb);
+            attacks |= shift<SOUTH_EAST>(bb);
+        }
+
+        return attacks;
+    }
+
+    Bitboard genKnightAttacks(Square sq)
+    {
+        Bitboard attacks = 0ULL;
+        Bitboard bb = 0ULL;
+
+
+        setBit(bb, sq);
+
+        // north knight attacks
+        attacks |= shiftKnight<NE_LONG>(bb);
+        attacks |= shiftKnight<NW_LONG>(bb);
+        attacks |= shiftKnight<NE_SHORT>(bb);
+        attacks |= shiftKnight<NW_SHORT>(bb);
+
+        // south knight attacks
+        attacks |= shiftKnight<SW_SHORT>(bb);
+        attacks |= shiftKnight<SE_LONG>(bb);
+        attacks |= shiftKnight<SW_LONG>(bb);
+        attacks |= shiftKnight<SE_SHORT>(bb);
+
+        return attacks;
+    }
+
+    Bitboard genKingAttacks(Square sq)
+    {
+        Bitboard attacks = 0ULL;
+        Bitboard bb = 0ULL;
+
+        setBit(bb, sq);
+        
+        attacks |= shift<NORTH>(bb);
+        attacks |= shift<SOUTH>(bb);
+
+        attacks |= shift<WEST>(bb);
+        attacks |= shift<EAST>(bb);
+
         attacks |= shift<NORTH_WEST>(bb);
         attacks |= shift<NORTH_EAST>(bb);
-    }
-    else 
-    {
-        // black pawns attacks
+
         attacks |= shift<SOUTH_WEST>(bb);
         attacks |= shift<SOUTH_EAST>(bb);
+
+        return attacks;
     }
 
-    return attacks;
 }
-
-Bitboard genKnightAttacks(Square sq)
-{
-    Bitboard attacks = 0ULL;
-    Bitboard bb = 0ULL;
-
-
-    setBit(bb, sq);
-
-    // north knight attacks
-    attacks |= shiftKnight<NE_LONG>(bb);
-    attacks |= shiftKnight<NW_LONG>(bb);
-    attacks |= shiftKnight<NE_SHORT>(bb);
-    attacks |= shiftKnight<NW_SHORT>(bb);
-
-    // south knight attacks
-    attacks |= shiftKnight<SW_SHORT>(bb);
-    attacks |= shiftKnight<SE_LONG>(bb);
-    attacks |= shiftKnight<SW_LONG>(bb);
-    attacks |= shiftKnight<SE_SHORT>(bb);
-
-    return attacks;
-}
-
-Bitboard genKingAttacks(Square sq)
-{
-    Bitboard attacks = 0ULL;
-    Bitboard bb = 0ULL;
-
-    setBit(bb, sq);
-    
-    attacks |= shift<NORTH>(bb);
-    attacks |= shift<SOUTH>(bb);
-
-    attacks |= shift<WEST>(bb);
-    attacks |= shift<EAST>(bb);
-
-    attacks |= shift<NORTH_WEST>(bb);
-    attacks |= shift<NORTH_EAST>(bb);
-
-    attacks |= shift<SOUTH_WEST>(bb);
-    attacks |= shift<SOUTH_EAST>(bb);
-
-    return attacks;
-}
-
 
 //Slider piece generation
 static constexpr std::array<Bitboard, NUM_SQUARES> rook_magics = 
@@ -363,12 +366,12 @@ namespace Attacks
     //pawn king knight
     void initLeapers()
     {
-        for(int sq = 0; sq < NUM_SQUARES; sq++)
+        for(Square sq = 0; sq < NUM_SQUARES; sq++)
         {
             kingAttacks[sq] = genKingAttacks(sq);
             knightAttacks[sq] = genKnightAttacks(sq);
 
-            for(int side = 0; side < NUM_SIDES; side++)
+            for(Side side = WHITE; side < NUM_SIDES; side++)
             {
                 pawnAttacks[side][sq] = genPawnAttacks(side, sq);
             }

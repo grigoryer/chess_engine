@@ -29,8 +29,7 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
         << " move " << SQUARE_NAMES[bestMove.getFrom()] << SQUARE_NAMES[bestMove.getTo()] 
         << " cp score " << selectedDepthScore 
         << " nodes " << nodesSearched 
-        << " TT hit rate: " << (100.0 * ttHits / ttProbes) << "%"
-        << std::endl;   
+        << "\n";   
 
         depth++;
     }
@@ -45,8 +44,6 @@ ExtdMove Search::search(Board& b, const int depth)
     // reset searching stats and default move
     nodesSearched = 0;
     selectedDepthScore = 0;
-    ttHits = 0;
-    ttProbes = 0;
 
     ExtdMove NULL_MOVE;
     NULL_MOVE.setMove(noSquare, noSquare, KING);
@@ -84,7 +81,7 @@ ExtdMove Search::search(Board& b, const int depth)
     return bestMove;
 }
 
-int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& intitialDepth)
+Score Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& intitialDepth)
 {
     // update node and check if stop flag active, since we havent completed it we return neg_inf to discard the search
     nodesSearched++;
@@ -95,27 +92,23 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
 
     if (b.isDraw()) { return 0; }
 
-    // TT probe
-    ttProbes++;
-    TTEntry* ttEntry = tranposTable->probeEntry(b.curState.hash);
 
+    //TTprobe
+    TTEntry* ttEntry = tranposTable->probeEntry(b.curState.hash);
     if (ttEntry != nullptr && ttEntry->hash == b.curState.hash)
     {
         if (ttEntry->depth >= depthLeft) 
         {
             if (ttEntry->type == EXACT)
             {
-                ttHits++;
                 return ttEntry->score;
             }
-            else if (ttEntry->type == HIGH && ttEntry->score >= beta)
+            else if (ttEntry->score >= beta && ttEntry->type == HIGH)
             {
-                ttHits++;
                 return ttEntry->score;
             }
-            else if (ttEntry->type == LOW && ttEntry->score <= alpha)
+            else if (ttEntry->score <= alpha && ttEntry->type == LOW)
             {
-                ttHits++;
                 return ttEntry->score;
             }
         }
@@ -133,19 +126,17 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         else { return 0; }  // stalemate
     }
 
-    int bestScore = NEG_INF;
+    Score bestScore = NEG_INF;
     ExtdMove bestMove{};
-    Key startHash = b.curState.hash;
     
     int alphaOriginal = alpha; // store for tt entry
-    NodeType nodeType{};
 
     for (auto m = list.list.begin(); m < list.list.begin() + legalCount; ++m)
     {
         if (stopFlag.load()) { return bestScore; }
 
         doMove(b, m);
-        int score = -negaMax(b, depthLeft - 1, -beta, -alpha, intitialDepth);
+        Score score = -negaMax(b, depthLeft - 1, -beta, -alpha, intitialDepth);
         undoMove(b, m);
 
         // make score relevant to the position for transposition
@@ -155,7 +146,6 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
         // alphabeta cutoffs, add ttentry here for beta since it is a cutoff
         if (score >= beta) 
         { 
-            nodeType = HIGH;
             if (!stopFlag.load()) { tranposTable->addEntry(b.curState.hash, depthLeft, score, HIGH, *m); }
             return score; 
         }
@@ -172,6 +162,8 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
     // dont add recent entry to TT if we called a stop since we return NEG_INF for null moves.
     if (!stopFlag.load())
     {
+
+        NodeType nodeType{};
         if (bestScore <= alphaOriginal) 
         { 
             nodeType = LOW; 
@@ -187,18 +179,26 @@ int Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& int
     return bestScore;
 }
 
-// DOESNT WORK: TODO, generateQuiescence doesnt work
-int Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
+Score Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
 {
     nodesSearched++;
     
     //probe tt for 
-    int bestValue = (b.curSide == WHITE ? eval.evaluateBoard(b) : -eval.evaluateBoard(b));
+    Score bestValue = (b.curSide == WHITE ? eval.evaluateBoard(b) : -eval.evaluateBoard(b));
 
     if (depthLeft == 0 || ((nodesSearched & 2047) == 0 && stopFlag.load())) { return bestValue; }
 
-    if (bestValue >= beta) { return bestValue; }
-    if (bestValue > alpha) { alpha = bestValue; }
+    NodeType nodet = LOW;
+
+    if (bestValue >= beta) 
+    { 
+        return bestValue; 
+    }
+
+    if (bestValue > alpha) 
+    { 
+        alpha = bestValue;
+    }
 
     MoveList list{};
     auto end = generateQuiescence(list.list.begin(), b, b.curSide);
@@ -209,7 +209,7 @@ int Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
         if (stopFlag.load()) { return bestValue; }
 
         doMove(b, m);
-        int score = -searchQuiescence(b, depthLeft - 1, -beta, -alpha);
+        Score score = -searchQuiescence(b, depthLeft - 1, -beta, -alpha);
         undoMove(b, m);
 
         if (stopFlag.load()) { return bestValue; }
@@ -233,6 +233,7 @@ int Search::scoreMoveList(Board& b, MoveList& list, ExtdMove* end)
 
     Move ttMove{};
     TTEntry* entry = tranposTable->probeEntry(b.curState.hash);
+
     if (entry != nullptr)
     {
         ttMove = entry->bestMove;

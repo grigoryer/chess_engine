@@ -43,7 +43,7 @@ ExtdMove* genPromotion(ExtdMove* list, Board& b, Bitboard promoPawns, Side side,
             Square sq = popLsb(promoPawns);
             for(Piece promo = QUEEN; promo <= KNIGHT; promo++)
             {
-                list->setMove(sq + fromDirection, sq, PAWN, NONE, promo);
+                list->setMove(static_cast<Square>(sq + fromDirection), sq, PAWN, NONE, promo);
                 list++;
             }
         }
@@ -75,14 +75,14 @@ ExtdMove* genPawnsQuiet(ExtdMove* list, Board& b, Bitboard target, Bitboard pawn
     while(doublePawns)
     {
         Square sq = popLsb(doublePawns);
-        list->setMove(sq + fromDirection + fromDirection, sq, PAWN, NONE, NONE, true);
+        list->setMove(static_cast<Square>(sq + fromDirection + fromDirection), sq, PAWN, NONE, NONE, true);
         list++;
     }
 
     while(pawns)
     {
         Square sq = popLsb(pawns);
-        list->setMove(sq + fromDirection, sq, PAWN);
+        list->setMove(static_cast<Square>(sq + fromDirection), sq, PAWN);
         list++;
     }
     return list;
@@ -153,10 +153,10 @@ ExtdMove* genPawns(ExtdMove* list, Board& b, Side side, Bitboard target)
     {
         if (side == WHITE) {
             list = genPawnsQuiet<WHITE>(list, b, target & ~b.occupancy, pawns);
-            list = genPawnsCapture<WHITE>(list, b, target & b.getSide(side ^ 1), pawns);
+            list = genPawnsCapture<WHITE>(list, b, target & b.getSide(static_cast<Side>(side ^ 1)), pawns);
         } else {
             list = genPawnsQuiet<BLACK>(list, b, target & ~b.occupancy, pawns);
-            list = genPawnsCapture<BLACK>(list, b, target & b.getSide(side ^ 1), pawns);
+            list = genPawnsCapture<BLACK>(list, b, target & b.getSide(static_cast<Side>(side ^ 1)), pawns);
         }
     }
 
@@ -234,7 +234,7 @@ ExtdMove* generateMoves(ExtdMove* list, Board& b, Side s)
     }
     else if constexpr (Mt == CAPTURE)
     {
-        target = b.getSide(s ^ 1);
+        target = b.getSide(static_cast<Side>(s ^ 1));
         list = genPieceMoves<KING, Mt>(list, b,s, target);
     }
     else if constexpr (Mt == QUIET)

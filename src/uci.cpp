@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-inline ExtdMove stringToMove(const std::string& moveStr, Board& b, Side s)
+inline ExtdMove stringToMove(const std::string& moveStr, Board& b)
 {
     ExtdMove move{};
     move.setMove(noSquare, noSquare, NONE);
@@ -96,7 +96,7 @@ void UciEngine::setPosition(const std::string& input)
         {
             if (tok.length() >= 4)
             {
-                ExtdMove move = stringToMove(tok, b, b.curSide);
+                ExtdMove move = stringToMove(tok, b);
                 if (move.getFrom() != noSquare) { doMove(b, &move); }
             }
         }
@@ -122,7 +122,7 @@ void UciEngine::setPosition(const std::string& input)
         {
             if (tok.length() >= 4)
             {
-                ExtdMove move = stringToMove(tok, b, b.curSide);
+                ExtdMove move = stringToMove(tok, b);
                 if (move.getFrom() != noSquare) { doMove(b, &move); }
             }
         }
@@ -187,7 +187,7 @@ void UciEngine::searchWorker()
         }
         else
         {
-            std::cout << "info NULL MOVE draw or mate" << std::endl;
+            std::cout << "info NULL MOVE draw or mate\n";
             std::cout << "bestmove 0000\n";
             std::cout.flush();
         }

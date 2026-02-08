@@ -58,7 +58,7 @@ inline void clearEpsquare(Board& b)
 
 inline void movePiece(Board& b, Side s, Piece piece, Square from, Square to)
 {
-    U64 mask = (1ULL << from) | (1ULL << to);
+    Bitboard mask = ((1ULL << from) | (1ULL << to));
 
     b.pieceBB[piece] ^= mask;
     b.sideBB[s]  ^= mask;

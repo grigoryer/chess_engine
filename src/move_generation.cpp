@@ -9,12 +9,12 @@
 
 bool isSquareAttacked(Board& b, Square sq, Side s, Bitboard occ)
 {
-    if (b.getUniquePiece(s ^ 1, KING) & Attacks::getPieceAttacks<KING>(sq, occ, s))     { return true; }
-    if (b.getUniquePiece(s ^ 1, QUEEN) & Attacks::getPieceAttacks<QUEEN>(sq, occ, s))   { return true; }
-    if (b.getUniquePiece(s ^ 1, ROOK) & Attacks::getPieceAttacks<ROOK>(sq, occ, s))     { return true; }
-    if (b.getUniquePiece(s ^ 1, BISHOP) & Attacks::getPieceAttacks<BISHOP>(sq, occ, s)) { return true; }
-    if (b.getUniquePiece(s ^ 1, KNIGHT) & Attacks::getPieceAttacks<KNIGHT>(sq, occ, s)) { return true; }
-    if (b.getUniquePiece(s ^ 1, PAWN) & Attacks::getPieceAttacks<PAWN>(sq, occ, s))     { return true; }
+    if (b.getUniquePiece(static_cast<Side>(s ^ 1), KING) & Attacks::getPieceAttacks<KING>(sq, occ, s))     { return true; }
+    if (b.getUniquePiece(static_cast<Side>(s ^ 1), QUEEN) & Attacks::getPieceAttacks<QUEEN>(sq, occ, s))   { return true; }
+    if (b.getUniquePiece(static_cast<Side>(s ^ 1), ROOK) & Attacks::getPieceAttacks<ROOK>(sq, occ, s))     { return true; }
+    if (b.getUniquePiece(static_cast<Side>(s ^ 1), BISHOP) & Attacks::getPieceAttacks<BISHOP>(sq, occ, s)) { return true; }
+    if (b.getUniquePiece(static_cast<Side>(s ^ 1), KNIGHT) & Attacks::getPieceAttacks<KNIGHT>(sq, occ, s)) { return true; }
+    if (b.getUniquePiece(static_cast<Side>(s ^ 1), PAWN) & Attacks::getPieceAttacks<PAWN>(sq, occ, s))     { return true; }
 
     return false;
 }
@@ -23,7 +23,7 @@ Bitboard generateBlockers(Board& b, Side s)
 {
     Bitboard pinners = 0;
     Bitboard blockers = 0;
-    Side enemy = s ^ 1;
+    Side enemy = static_cast<Side>(s ^ 1);
     Square ksq = lsb(b.getUniquePiece(s, KING));
 
     pinners = (b.getUniquePiece(enemy, ROOK) | b.getUniquePiece(enemy, QUEEN)) & Attacks::getPieceAttacks<ROOK>(ksq, 0, s);
@@ -54,7 +54,7 @@ bool isLegal(ExtdMove* move, Board& b, Side s, Bitboard blockers)
 {
     Square ksq = lsb(b.getUniquePiece(s, KING));
     Bitboard blockerBB = 1ULL << move->getFrom() & blockers;
-    Side enemy = s ^ 1;
+    Side enemy = static_cast<Side>(s ^ 1);
 
     Square from = move->getFrom();
     Square to = move->getTo();
@@ -128,6 +128,5 @@ ExtdMove* generateQuiescence(ExtdMove* list, Board& b, Side s)
     }
 
     list = generateMoves<CAPTURE>(list, b, s);
-
     return list;
 }

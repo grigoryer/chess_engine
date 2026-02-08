@@ -8,7 +8,7 @@ constexpr int ROOK_BLOCKER = 4096;
 //max relevant occuapncy per piece 2^10 and 2^12
 
 
-enum KnightDirection
+enum KnightDirection : std::int8_t
 {
     NE_LONG   = 17,
     NE_SHORT  = 10,

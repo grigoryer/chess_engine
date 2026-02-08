@@ -90,10 +90,10 @@ enum NodeType : U8
 struct TTEntry
 {
     Key hash = 0ULL;
-    Move bestMove{};
-    Score score = 0;
     U8 depth = 0;
+    Score score = 0;
     NodeType type = LOW;
+    Move bestMove{};
 
     TTEntry();
     TTEntry(Key hash, U8 depth, Score score, NodeType type, Move move);

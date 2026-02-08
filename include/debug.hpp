@@ -13,7 +13,7 @@ void printDebug(Board& b);
 
 int perft(Board& b, int depth);
 
-int perftDivide(Board& b, int depth);
+U64 perftDivide(Board& b, int depth);
 
 int perftDebug(Board& b, int depth);
 
