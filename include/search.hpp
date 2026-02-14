@@ -13,23 +13,20 @@
 
 int scoreMoveList(Board& b, MoveList& list, ExtdMove* end);
 
-
 class Search
 {
     int nodesSearched = 0;
-    int selectedDepthScore = 0;
+    Score selectedDepthScore = 0;
     
     Evaluation eval;
-    Score negaMax(Board& b, int depthLeft, int alpha, int beta, const int& initialDepth);
-    Score searchQuiescence(Board& b, int depthLeft, int alpha, int beta);
+    Score negaMax(Board& b, int depthLeft, Score alpha, Score beta, const int& initialDepth);
+    Score searchQuiescence(Board& b, int depthLeft, Score alpha, Score beta);
     int scoreMoveList(Board& b, MoveList& list, ExtdMove* end);
 
 public:
 
     std::unique_ptr<TTable> tranposTable = std::make_unique<TTable>();
     std::atomic<bool> stopFlag{false};
-    ExtdMove search(Board& b, const int depth);
+    ExtdMove search(Board& b, const int depth, Score previousScore);
     ExtdMove iterativeDeep(Board& b, const int maxDepth);
 };
-
-

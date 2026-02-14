@@ -16,11 +16,10 @@ UCI LOOP AND SPRT COMPLETE //BASE ENGINE HERE
 
 7. Iterative deepining  -- DONE
 
+8. Game Depth Evaluation Change and small eval tweaks (pawn promotion, king center)
+
+9. Aspiration Window
+
 --CURRENT--
 
-8. Aspiration Window
-
-
-9. Game Depth Evaluation Change and small eval tweaks (pawn promotion, king center)
-
-10. PV Variation
+10. PV 

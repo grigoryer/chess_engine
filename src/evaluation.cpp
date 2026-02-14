@@ -15,7 +15,7 @@ inline Score Evaluation::scorePosition(Piece piece, Square sq, bool isLateGame)
     switch(piece)
     {
         case(KING) : { return isLateGame ? KING_LATE_EVAL_MAP[sq] : KING_EVAL_MAP[sq]; }
-        case(PAWN) : { return PAWN_EVAL_MAP[sq]; }
+        case(PAWN) : { return isLateGame ? PAWN_LATE_EVAL_MAP[sq] : PAWN_EVAL_MAP[sq]; }
         case(ROOK) : { return ROOK_EVAL_MAP[sq]; }
         case(QUEEN) : { return QUEEN_EVAL_MAP[sq]; }
         case(KNIGHT) : { return KNIGHT_EVAL_MAP[sq]; }

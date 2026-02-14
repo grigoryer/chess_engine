@@ -93,3 +93,12 @@ qsearch max depth 3 ---
 	Ptnml(0-2): [4, 4, 25, 41, 41], WL/DD Ratio: 1.27
 	LLR: 2.96 (100.4%) (-2.94, 2.94) [0.00, 10.00]
 	--------------------------------------------------
+
+aspiration window ---
+	Search Features: AB prunning, MVV_LVA, transposition table (dep replace and move ordering), qsearch, aspiration
+	Eval Features: Piece difference, Piece position, late game king
+
+
+eval adjustments ---
+	Search Features: AB prunning, MVV_LVA, transposition table (dep replace and move ordering), qsearch, aspiration
+	Eval Features: Piece difference, Piece position, late game king(helps move king middle) and pawn(promotions)

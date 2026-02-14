@@ -12,17 +12,19 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
 {
     ExtdMove bestMove{};
     ExtdMove tempMove{};
+    Score previousScore = 0;
 
     int depth = 1;
     while (!stopFlag.load() && depth <= maxDepth) 
     {
         Board copy = b; // for now copy since getting king disapperaing error TODO: find out why king disapperas in original board state.
         
-        tempMove = search(copy, depth);
+        tempMove = search(copy, depth, previousScore);
 
         if (stopFlag.load()) { break; }
         
         bestMove = tempMove; // only update if search completed we select only best move if the search is completed 
+        previousScore = selectedDepthScore; // store score for next iteration's aspiration window
 
         // info with depth, nodes searched and score of best position possible
         std::cout << "info depth " << depth  
@@ -38,8 +40,8 @@ ExtdMove Search::iterativeDeep(Board& b, const int maxDepth)
 }
 
 
-// helper function returns best move at depth 1 perfroming negamax on all rest depth nodes 
-ExtdMove Search::search(Board& b, const int depth)
+// helper function returns best move at depth performing negamax on all rest depth nodes 
+ExtdMove Search::search(Board& b, const int depth, Score previousScore)
 {
     // reset searching stats and default move
     nodesSearched = 0;
@@ -48,40 +50,93 @@ ExtdMove Search::search(Board& b, const int depth)
     ExtdMove NULL_MOVE;
     NULL_MOVE.setMove(noSquare, noSquare, KING);
 
-    if (b.isDraw()) { return NULL_MOVE; } // draw check for reptition or 50 moves
+    if (b.isDraw()) { return NULL_MOVE; }
 
-    // gen legal moves, then get amount of legal moves and sort them using move ordering MVV LVA
     MoveList list{};
     auto end = generateLegals(list.list.begin(), b, b.curSide);
-    int legalCount = scoreMoveList(b, list, end); // returns legal count/scores moves (illegals get pushed to back)/and orders them,
+    int legalCount = scoreMoveList(b, list, end);
 
-    if (legalCount == 0) { return NULL_MOVE; } // mate or stalemate since no legal moves
+    if (legalCount == 0) { return NULL_MOVE; }
 
     ExtdMove bestMove = NULL_MOVE;
-    int bestScore = NEG_INF;
+    Score bestScore = NEG_INF;
     
-    // for each move check if we need check stoppage, then recursivly search through move tree negamax.
-    for (auto m = list.list.begin(); m < list.list.begin() + legalCount; ++m)
+    Score alpha = NEG_INF;
+    Score beta = POS_INF;
+    
+    // Skip aspiration window searches for low depths 1-4
+    if (depth >= ASPIRATION_DEPTH_THRESHOLD) 
     {
-        if (stopFlag.load()) { return bestMove; }
-
-        doMove(b, m);
-        int score = -negaMax(b, depth - 1, NEG_INF, POS_INF, depth);
-        undoMove(b, m);
-
-        // update best move if score exceeds prev
-        if (score > bestScore) 
+        alpha = static_cast<Score>(previousScore - INITIAL_WINDOW);
+        beta = static_cast<Score>(previousScore + INITIAL_WINDOW);
+    }
+    
+    // Aspiration window search with re-search on failure
+    int windowSize = INITIAL_WINDOW;
+    bool searchComplete = false;
+    
+    while (!searchComplete && !stopFlag.load())
+    {
+        //save original window boundaries for fail-low/fail-high detection
+        Score alphaOriginal = alpha;
+        Score betaOriginal = beta;
+        
+        //search all moves
+        for (auto m = list.list.begin(); m < list.list.begin() + legalCount; ++m)
         {
-            bestScore = score;
-            bestMove = *m;
-            selectedDepthScore = score;
-        }   
+            if (stopFlag.load()) { return bestMove; }
+
+            doMove(b, m);
+            Score score = -negaMax(b, depth - 1, -beta, -alpha, depth);
+            undoMove(b, m);
+
+            if (score > bestScore) 
+            {
+                bestScore = score;
+                bestMove = *m;
+                selectedDepthScore = score;
+            }   
+            
+            if (score > alpha) 
+            {
+                alpha = score;
+            }
+        }
+        
+        // Check if we need to re-search
+        if (depth < ASPIRATION_DEPTH_THRESHOLD)
+        {
+            searchComplete = true; // No aspiration window used
+        }
+        else if (bestScore <= alphaOriginal || bestScore >= betaOriginal)
+        {
+            // Failed low or failed high - widen window and re-search
+            windowSize *= 2;   
+            
+            if (windowSize > MAX_WINDOW)
+            {
+                // Window too large, use full window
+                alpha = NEG_INF;
+                beta = POS_INF;
+            }
+            else
+            {
+                // Widen window symmetrically around previous score
+                alpha = static_cast<Score>(previousScore - windowSize);
+                beta = static_cast<Score>(previousScore + windowSize);
+            }
+        }
+        else
+        {
+            //search completed successfully within window
+            searchComplete = true;
+        }
     }
     
     return bestMove;
 }
 
-Score Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& intitialDepth)
+Score Search::negaMax(Board& b, int depthLeft, Score alpha, Score beta, const int& intitialDepth)
 {
     // update node and check if stop flag active, since we havent completed it we return neg_inf to discard the search
     nodesSearched++;
@@ -129,7 +184,7 @@ Score Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& i
     Score bestScore = NEG_INF;
     ExtdMove bestMove{};
     
-    int alphaOriginal = alpha; // store for tt entry
+    Score alphaOriginal = alpha; // store for tt entry
 
     for (auto m = list.list.begin(); m < list.list.begin() + legalCount; ++m)
     {
@@ -179,7 +234,7 @@ Score Search::negaMax(Board& b, int depthLeft, int alpha, int beta, const int& i
     return bestScore;
 }
 
-Score Search::searchQuiescence(Board& b, int depthLeft, int alpha, int beta)
+Score Search::searchQuiescence(Board& b, int depthLeft, Score alpha, Score beta)
 {
     nodesSearched++;
     

@@ -76,9 +76,12 @@ const int QSEARCH_DEPTH = 3;
 
 const Score NEG_INF = std::numeric_limits<Score>::min() + 1;
 const Score POS_INF = std::numeric_limits<Score>::max();
-const Score MATE = 30000;
+const Score MATE = std::numeric_limits<Score>::max() - 1000;
 
 
+const int ASPIRATION_DEPTH_THRESHOLD = 5;
+const Score INITIAL_WINDOW = 50;
+const Score MAX_WINDOW = 400;      
 
 // ============================================================================
 // EVAL CONSTANTS
