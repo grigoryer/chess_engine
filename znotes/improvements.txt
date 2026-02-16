@@ -98,6 +98,15 @@ aspiration window ---
 	Search Features: AB prunning, MVV_LVA, transposition table (dep replace and move ordering), qsearch, aspiration
 	Eval Features: Piece difference, Piece position, late game king
 
+	--------------------------------------------------
+	Results of asperation vs eval_fix (10+0.5, NULL, NULL, opening_book.pgn):
+	Elo: 42.67 +/- 20.53, nElo: 50.53 +/- 24.05
+	LOS: 100.00 %, DrawRatio: 32.92 %, PairsRatio: 1.54
+	Games: 802, Wins: 324, Losses: 226, Draws: 252, Points: 450.0 (56.11 %)
+	Ptnml(0-2): [33, 73, 132, 89, 74], WL/DD Ratio: 1.93
+	LLR: 2.98 (101.1%) (-2.94, 2.94) [0.00, 10.00]
+	--------------------------------------------------
+
 
 eval adjustments ---
 	Search Features: AB prunning, MVV_LVA, transposition table (dep replace and move ordering), qsearch, aspiration

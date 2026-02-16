@@ -91,7 +91,7 @@ const Score MAX_WINDOW = 400;
 const std::array<int, NUM_PIECES> PHASE_PIECE_VALUES = {0, 4, 2, 2, 2, 1};
 const std::array<Score, NUM_PIECES> PIECE_SCORES = {0, 900, 500, 315, 300, 100};
 
-constexpr int LATEGAME_PHASE = 15;    
+constexpr int LATEGAME_PHASE = 18;    
 
 // ============================================================================
 // ENUMERATIONS

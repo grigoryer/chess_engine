@@ -2,16 +2,15 @@
 #include <evaluation.hpp>
 
 //piece in order are QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NONE
-//all arrays are from own sides perspective so for uneven
+//all arrays are from own sides perspective, firs row = rank 1 for white and rank 8 for black
+
 constexpr Square flipSquare(Square sq)
 {
-    return static_cast<Square>(sq ^ 56);
+    return sq ^ 56;
 }
 
 inline Score Evaluation::scorePosition(Piece piece, Square sq, bool isLateGame)
 {
-    sq = flipSquare(sq);
-
     switch(piece)
     {
         case(KING) : { return isLateGame ? KING_LATE_EVAL_MAP[sq] : KING_EVAL_MAP[sq]; }
@@ -43,20 +42,24 @@ Score Evaluation::evaluateBoard(Board& b)
     bool lateGame = b.curState.phaseScore <= LATEGAME_PHASE;
     
     // evaluate non-pawn pieces normally
-    for (Piece piece = KING; piece <= PAWN; piece++) 
+    for (Piece piece = QUEEN; piece <= PAWN; piece++) 
     {
         Bitboard whiteBB = b.getUniquePiece(WHITE, piece);
         Bitboard blackBB = b.getUniquePiece(BLACK, piece);
         
         while (whiteBB)
         {
-            positionScore += scorePosition(piece, popLsb(whiteBB), lateGame);
+            Square sq = popLsb(whiteBB);
+            positionScore += scorePosition(piece, sq, lateGame);
+            
         }
         while (blackBB)
         {
-            positionScore -= scorePosition(piece, popLsb(blackBB), lateGame);
+            Square sq = popLsb(blackBB);
+            sq = flipSquare(sq);
+            positionScore -= scorePosition(piece, sq, lateGame);
         }
     }
-    
-    return pieceScore + positionScore;
+
+    return (pieceScore + positionScore);
 }
